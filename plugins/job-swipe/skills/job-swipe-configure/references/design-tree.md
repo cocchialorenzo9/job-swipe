@@ -76,7 +76,7 @@ Ask in two rounds at most, then prove it with a real sample (E-proto).
 - **E11 Photo**: not supported, on purpose — many application systems strip or mangle photos, and in many
   countries a photo can introduce bias. If they insist, say so plainly and note it; don't fake it.
 - **E-proto**: build a sample CV from their real facts, in the agreed style, aimed at their #1 target role
-  (`build.py`). Send it (SendUserFile). One round: "Shall we keep this look?" plus 2–4 specific questions about what
+  (`build.py`). Send it to them (see SKILL.md, E-proto). One round: "Shall we keep this look?" plus 2–4 specific questions about what
   you see (density, colour, order, wording of the top bullets). Iterate up to 3 times.
 
 ## F · Angles (after: C1 and B2)

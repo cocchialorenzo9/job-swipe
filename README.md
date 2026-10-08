@@ -4,13 +4,17 @@ Your own job feed, run by Claude.
 
 - Twice a week (or as often as you like), Claude looks for jobs that match what you want and puts them on your **Job Swipe board**.
 - You swipe on your phone: **right** = interested, **left** = not for me, **✓** = already applied. Add a short "why" to a swipe, and the next search uses it.
-- Every job you swipe right on gets a **one-page CV made for that job**. It's built only from facts in your real CV and is easy for application systems to read. It's ready by the evening, under ♥.
+- Every job you swipe right on gets a **one-page CV made for that job** (optional). It's built only from facts in your real CV and is easy for application systems to read. It shows up under ♥ the next time the CV task runs: by default weekday evenings, so a job liked on Saturday gets its CV on Monday.
 
 You don't need to code. You need a paid **Claude plan (Pro or higher)** and the **Claude desktop app** for the first setup. After that, it all runs in the cloud, even when your laptop is closed, and you can swipe from the Claude phone app.
 
 ---
 
 ## Set it up (about 10 minutes)
+
+**0. Check two settings** (one time)
+
+In Claude, open **Settings → Capabilities** and make sure **web search** and **code execution and file creation** are turned on. The search needs the first; your board and your CVs need the second.
 
 **1. Add Job Swipe to Claude** (one time)
 
@@ -27,7 +31,7 @@ Then install the **job-swipe** plugin from that list.
 Start a new task and type:
 
 ```
-/job-swipe:configure
+/job-swipe-configure
 ```
 
 First, Claude asks for **your current CV** (PDF or Word). Add anything else that helps, like a LinkedIn PDF, a portfolio, or a job you'd love. Then it interviews you in short rounds about:
@@ -39,15 +43,15 @@ First, Claude asks for **your current CV** (PDF or Word). Add anything else that
 
 Each question comes with Claude's suggestion, so "yes" is often enough. Nothing is built until you confirm the summary. Then Claude creates your private **Job Swipe board**, schedules everything, and, if you want, finds your first jobs right away.
 
-**3. One switch to flip**
+**3. Check that it runs on its own**
 
-Open **Scheduled tasks** in Claude. Open each "Job Swipe" task and turn on **Automatically approve**. Otherwise the task waits for you to click "allow" instead of running on its own.
+Open **Scheduled tasks** in Claude and open each "Job Swipe" task. If **Automatically approve** is off, turn it on. Otherwise the task waits for you to click "allow" instead of running on its own. (Claude tells you at the end of setup if this is needed.)
 
 **Can't add plugins?** Type this in a new Claude task instead. It does the same thing:
 
 ```
 Configure Job Swipe for me. Run: git clone --depth 1 https://github.com/cocchialorenzo9/job-swipe /tmp/job-swipe
-then follow /tmp/job-swipe/plugins/job-swipe/skills/configure/SKILL.md
+then follow /tmp/job-swipe/plugins/job-swipe/skills/job-swipe-configure/SKILL.md
 ```
 
 ---
@@ -56,7 +60,7 @@ then follow /tmp/job-swipe/plugins/job-swipe/skills/configure/SKILL.md
 
 - **Find your board:** it's in your Claude artifacts as "Job Swipe". Pin it so it's easy to find on your phone.
 - **Change what you're looking for:** tap **⚙** on the board and edit your search brief. The next search uses it.
-- **Change anything else** (how often, a new job on your CV, the CV look, pause): run `/job-swipe:configure` again. Claude sees your existing board and only asks about what you want to change.
+- **Change anything else** (how often, a new job on your CV, the CV look, CVs on or off, pause): run `/job-swipe-configure` again. Claude sees your existing board and only asks about what you want to change.
 - **Your data:** your board is private to your Claude account. Nobody else (including whoever shared this with you) can see your jobs, swipes or CV. CVs on the board are deleted after 7 days.
 - **Usage:** each search uses a fair amount of your Claude usage. Twice a week is a good balance. The CV task stops right away on days with nothing new.
 
@@ -68,11 +72,13 @@ Claude never applies to jobs or contacts anyone for you. You always click **Appl
 
 | Part | What it does |
 |---|---|
-| `plugins/job-swipe/skills/configure` | The interview (in the style of [grilling](https://github.com/mattpocock/skills)), creating your board, scheduling, and later changes |
+| `plugins/job-swipe/skills/job-swipe-configure` | The interview (in the style of [grilling](https://github.com/mattpocock/skills)), creating your board, scheduling, and later changes |
 | `plugins/job-swipe/skills/find-jobs` | The search: reads your brief and swipes, searches, checks each job is live on the company site, adds cards |
 | `plugins/job-swipe/skills/tailor-cvs` | Builds a one-page CV for each liked job (LaTeX, single column, readable by application systems) |
 | `plugins/job-swipe/board/job-swipe.html` | The swipe board page |
+| `plugins/job-swipe/references/board-data.md` | Rules all three skills follow when reading and writing your board |
+| `tests/` | Tests for the CV builder (`python3 -m unittest discover tests`) |
 
-Your scheduled tasks only point to these instructions; they don't copy them. When this repo gets better, the improvements reach you through plugin updates. You never redo the setup.
+Your scheduled tasks only point to these instructions; they don't copy them. When this repo gets better, the improvements reach you through plugin updates. You never redo the setup. If you don't see updates arriving, open **Customize → Plugins** and update **job-swipe** (or turn on automatic updates for its marketplace, if your app offers it).
 
 Ideas or problems? Tell Lorenzo.
