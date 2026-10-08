@@ -6,22 +6,26 @@ description: Searches the web for new job openings that match a person's Job Swi
 # Job Swipe — find jobs
 
 Input: the board URL (from the arguments or the prompt). If you have none, find the person's "Job Swipe" artifact
-with Artifact `list`. Use the ArtifactData tool for every board read/write (load it with ToolSearch if deferred).
-When running on a schedule: never ask questions; make reasonable calls and finish.
+with Artifact `list`. When running on a schedule: never ask questions; make reasonable calls and finish.
+
+Board data (the `profile` and `jobs` collections) is read and written with the Artifact tool's `read_db` /
+`write_db` actions (`url` = board URL, `db_op` get/list/query/set/update/batch). Older apps expose the same
+operations as a separate ArtifactData tool; load whichever exists with ToolSearch if deferred. Every
+`update` / `set` on a doc you read passes its `version` as `if_version`.
 
 Be efficient — most people run this on a Pro plan with usage limits. Aim for about 15–25 web searches per run and
 stop searching once you have enough strong candidates for `maxNewPerRun`.
 
 ## 1. Load the profile
 
-ArtifactData `get` collection `profile`, doc `me`. You need: `brief` (the source of truth: the person wrote or
+`read_db` `get` collection `profile`, doc `me`. You need: `brief` (the source of truth: the person wrote or
 approved it), `pickiness`, `maxNewPerRun`, `language`, `timezone`, `learned` (patterns earlier runs noticed).
 If the doc is missing or has no brief, send one push notification "Your Job Swipe board isn't set up yet: ask
 Claude to 'configure Job Swipe'." and stop.
 
 ## 2. Learn from swipes
 
-ArtifactData `list` collection `jobs` with `query.limit` 1000 and an `out_dir` in your scratch folder; summarise
+`read_db` `list` collection `jobs` with `query.limit` 1000 and an `out_dir` in your scratch folder; summarise
 the files with a short script instead of reading them one by one.
 - Build the "already seen" set: every doc id, and every company + title pair (any status).
 - Liked / applied = good examples; disliked = bad examples. Notes (`note`) are the strongest signal.
@@ -69,7 +73,7 @@ Keep a job only if ALL hold:
 
 - Doc id = first 20 hex characters of sha256(canonical URL: lower-case host, no tracking parameters like utm_*,
   gh_src, ref, source; no trailing slash). Compute it with a one-line script.
-- Add at most `maxNewPerRun` cards, best first. One ArtifactData `batch` with `set` ops, collection `jobs`:
+- Add at most `maxNewPerRun` cards, best first. One `write_db` `batch` with `set` ops (50 writes max per batch), collection `jobs`:
   ```
   title, company, location, url, source ("hiring.cafe" | "web"), remote (true/false),
   blurb (2–4 sentences: what the job is, team, stack/domain, anything notable like salary),
@@ -82,7 +86,7 @@ Keep a job only if ALL hold:
 ## 7. Remember clear patterns
 
 If you saw a clear, repeated pattern in the swipes (3+ consistent signals, or a note that states it), add one short
-line to `profile/me.learned` (ArtifactData `update` with the full new array; keep at most 15 lines, drop the
+line to `profile/me.learned` (`write_db` `update` with the full new array; keep at most 15 lines, drop the
 oldest, no duplicates). Never edit `brief` — it belongs to the person.
 
 ## 8. Notify

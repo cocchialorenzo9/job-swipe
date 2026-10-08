@@ -20,11 +20,14 @@ Files (paths relative to this SKILL.md):
 
 ## 0. Detect the situation
 
-1. Tools: you need the Artifact tool, ArtifactData, and the scheduled-task tools (`create_trigger`,
-   `update_trigger`, `list_triggers`; load deferred tools with ToolSearch). Without scheduled tasks, say plainly
+1. Tools: you need the Artifact tool and the scheduled-task tools (`create_trigger`, `update_trigger`,
+   `list_triggers`; load deferred tools with ToolSearch). Board data (the `profile` and `jobs` collections) is read and written with the Artifact tool's `read_db` /
+   `write_db` actions (`url` = board URL, `db_op` get/list/query/set/update/batch). Older apps expose the same
+   operations as a separate ArtifactData tool; load whichever exists with ToolSearch if deferred. Every
+   `update` / `set` on a doc you read passes its `version` as `if_version`. Without scheduled tasks, say plainly
    this needs a paid Claude plan (Pro or higher) in the Claude app, and stop.
 2. Find an existing board: a board URL in the request, or Artifact `list` → an artifact titled "Job Swipe".
-   If found, ArtifactData `get` profile/me and profile/cv.
+   If found, `read_db` `get` profile/me and profile/cv.
    - **Board exists and is configured → Reconfigure mode** (section 6).
    - **Board exists but profile/me is empty**, or **no board → First-time mode** (sections 1–5). Reuse an empty
      existing board instead of publishing a new one.
@@ -48,7 +51,7 @@ Follow `references/grilling.md` over the tree in `references/design-tree.md`:
 - Branch E (CV look) only if they want tailored CVs; finish it with **E-proto**: build a sample CV from their real
   facts in the agreed style (write `master_cv.yaml` + a small spec for their #1 target role, run
   `python3 ../tailor-cvs/cv/build.py master_cv.yaml spec.yaml cv_sample`; it must say `ATS text check: OK` and stay
-  within the page limit), look at a preview yourself (`pdftoppm -r 70 -png`), send the PDF (SendUserFile), and run
+  within the page limit), look at a preview yourself (`pdftoppm -r 70 -png`), send them the PDF (with your file-sharing tool, e.g. SendUserFile; if you have none, tell them where the PDF is saved so they can open it), and run
   one look-and-feel round on what they see. Iterate up to 3 times.
 
 While grilling, keep two drafts up to date in your working directory:
@@ -73,20 +76,20 @@ Ask: "Shall I build it like this?" Build nothing until they say yes. Changes →
    and publish it with the Artifact tool: `icon` "briefcase", `description` "My job feed: swipe right on jobs I
    like.", `capabilities` `{"db": {}, "assets": {}, "downloads": true}` (load the artifact-capabilities skill first
    if your tools ask you to). Keep the returned URL as BOARD_URL.
-2. **Profile**: ArtifactData `set` collection `profile`, doc `me`:
+2. **Profile**: `write_db` `set` collection `profile`, doc `me`:
    `name, timezone (IANA), language (of the brief), brief (text of brief.md), pickiness ("open" | "selective" |
    "exceptional"), maxNewPerRun, searchSchedule (human text, e.g. "Monday and Thursday mornings"), cvEnabled,
-   cvSchedule (human text, omit if off), learned ([]), configuredAt (ISO now), boardUrl, kitVersion ("0.2.0")`.
-3. **CV details** (if CVs on): ArtifactData `set` collection `profile`, doc `cv`:
+   cvSchedule (human text, omit if off), learned ([]), configuredAt (ISO now), boardUrl, kitVersion ("0.2.1")`.
+3. **CV details** (if CVs on): `write_db` `set` collection `profile`, doc `cv`:
    `{masterYaml: <full text of master_cv.yaml>, updatedAt: <ISO now>}`.
-4. **Check**: ArtifactData `get` profile/me — the brief must be there.
+4. **Check**: `read_db` `get` profile/me — the brief must be there.
 5. **Schedules** with `create_trigger` (their time zone as `CRON_TZ=<tz>`, minutes off the hour), prompts from
    `references/task-prompts.md` with BOARD_URL filled in:
    - "Job Swipe: find jobs" — e.g. twice a week at 7:47 → `CRON_TZ=<tz> 47 7 * * 1,4`; weekdays → `1-5`;
      weekly → `1`.
    - "Job Swipe: tailored CVs" (if on) — e.g. `CRON_TZ=<tz> 52 17 * * 1-5`. It exits at once on days with
      nothing new, so it costs little.
-   Save the ids: ArtifactData `update` profile/me with `searchTaskId`, `cvTaskId`.
+   Save the ids: `write_db` `update` profile/me with `searchTaskId`, `cvTaskId`.
    If a result's `permission_mode` is not "auto", tell them: "Open Scheduled tasks in Claude, open each Job Swipe
    task and turn on 'Automatically approve', otherwise it waits for you instead of running."
 6. **First batch** (if they said yes in G1): follow `../find-jobs/SKILL.md` for BOARD_URL here and now (max 6

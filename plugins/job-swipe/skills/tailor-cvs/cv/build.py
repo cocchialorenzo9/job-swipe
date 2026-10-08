@@ -15,14 +15,38 @@ bullets / optional sections, and reports what it dropped), and a clean text laye
 """
 import pathlib, re, shutil, subprocess, sys, unicodedata
 
-import jinja2, yaml
+
+def _apt(*pkgs):
+    """Best-effort apt install (fresh cloud sessions); silently does nothing where apt is unavailable."""
+    if shutil.which("apt-get"):
+        cmd = "apt-get install -y -q {0} || (apt-get update -q && apt-get install -y -q {0})".format(" ".join(pkgs))
+        subprocess.run(cmd, shell=True, capture_output=True)
+
+
+try:
+    import jinja2, yaml
+except ImportError:
+    subprocess.run([sys.executable, "-m", "pip", "install", "-q", "jinja2", "pyyaml"], capture_output=True)
+    try:
+        import jinja2, yaml
+    except ImportError:
+        sys.exit("Missing Python packages: run `python3 -m pip install jinja2 pyyaml`, then try again.")
+
+# Fresh cloud sessions may lack LaTeX or poppler; LaTeX is needed to render, poppler to count pages and check the text.
+if not shutil.which("pdflatex"):
+    _apt("texlive-latex-base", "texlive-latex-recommended", "texlive-fonts-recommended", "texlive-latex-extra")
+if not (shutil.which("pdftotext") and shutil.which("pdfinfo")):
+    _apt("poppler-utils")
+_missing = [t for t in ("pdflatex", "pdftotext", "pdfinfo", "kpsewhich") if not shutil.which(t)]
+if _missing:
+    sys.exit("Missing tools: " + ", ".join(_missing) + ". Install a LaTeX distribution (e.g. TeX Live or MacTeX) "
+             "and poppler (pdftotext/pdfinfo), then try again.")
 
 ROOT = pathlib.Path(__file__).resolve().parent
 
 # Fresh cloud sessions may lack Latin Modern (needed for a clean T1 text layer + euro sign).
 if subprocess.run(["kpsewhich", "lmodern.sty"], capture_output=True, text=True).stdout.strip() == "":
-    subprocess.run("apt-get install -y -q lmodern || (apt-get update -q && apt-get install -y -q lmodern)",
-                   shell=True, capture_output=True)
+    _apt("lmodern")
 
 # Spacing presets, loosest first; the builder walks down until the CV fits on one page.
 PRESETS = [
