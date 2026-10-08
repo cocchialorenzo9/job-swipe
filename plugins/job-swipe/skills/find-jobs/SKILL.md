@@ -8,10 +8,7 @@ description: Searches the web for new job openings that match a person's Job Swi
 Input: the board URL (from the arguments or the prompt). If you have none, find the person's "Job Swipe" artifact
 with Artifact `list`. When running on a schedule: never ask questions; make reasonable calls and finish.
 
-Board data (the `profile` and `jobs` collections) is read and written with the Artifact tool's `read_db` /
-`write_db` actions (`url` = board URL, `db_op` get/list/query/set/update/batch). Older apps expose the same
-operations as a separate ArtifactData tool; load whichever exists with ToolSearch if deferred. Every
-`update` / `set` on a doc you read passes its `version` as `if_version`.
+Read `../../references/board-data.md` first: which tools touch the board, and how to handle a refused write.
 
 Be efficient — most people run this on a Pro plan with usage limits. Aim for about 15–25 web searches per run and
 stop searching once you have enough strong candidates for `maxNewPerRun`.
@@ -86,8 +83,9 @@ Keep a job only if ALL hold:
 ## 7. Remember clear patterns
 
 If you saw a clear, repeated pattern in the swipes (3+ consistent signals, or a note that states it), add one short
-line to `profile/me.learned` (`write_db` `update` with the full new array; keep at most 15 lines, drop the
-oldest, no duplicates). Never edit `brief` — it belongs to the person.
+line to `profile/me.learned` (`get` profile/me fresh, then `write_db` `update` with the full new array and
+`if_version`; keep at most 15 lines, drop the oldest, no duplicates). If the person edited the profile meanwhile,
+follow `../../references/board-data.md`: re-read, rebuild the array from the fresh `learned`, write again. Never edit `brief` — it belongs to the person.
 
 ## 8. Notify
 

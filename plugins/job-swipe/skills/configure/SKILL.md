@@ -14,17 +14,17 @@ Files (paths relative to this SKILL.md):
 - `references/design-tree.md` — WHAT to cover, in which order, with recommended defaults.
 - `references/brief-template.md` — the search brief format.
 - `references/task-prompts.md` — the scheduled-task prompts.
+- `../../references/board-data.md` — which tools touch the board, and how to handle a refused write.
 - `../../board/job-swipe.html` — the board page.
+- `../../.claude-plugin/plugin.json` — the kit's `version` (stamped as `kitVersion`).
 - `../tailor-cvs/cv/` — CV builder (`build.py`), `examples/master_cv.example.yaml` (structure + rules for CV
   details, incl. `style`), `examples/job_spec.example.yaml`.
 
 ## 0. Detect the situation
 
 1. Tools: you need the Artifact tool and the scheduled-task tools (`create_trigger`, `update_trigger`,
-   `list_triggers`; load deferred tools with ToolSearch). Board data (the `profile` and `jobs` collections) is read and written with the Artifact tool's `read_db` /
-   `write_db` actions (`url` = board URL, `db_op` get/list/query/set/update/batch). Older apps expose the same
-   operations as a separate ArtifactData tool; load whichever exists with ToolSearch if deferred. Every
-   `update` / `set` on a doc you read passes its `version` as `if_version`. Without scheduled tasks, say plainly
+   `list_triggers`; load deferred tools with ToolSearch). Read and write board data as `../../references/board-data.md`
+   says. Without scheduled tasks, say plainly
    this needs a paid Claude plan (Pro or higher) in the Claude app, and stop.
 2. Find an existing board: a board URL in the request, or Artifact `list` → an artifact titled "Job Swipe".
    If found, `read_db` `get` profile/me and profile/cv.
@@ -79,7 +79,7 @@ Ask: "Shall I build it like this?" Build nothing until they say yes. Changes →
 2. **Profile**: `write_db` `set` collection `profile`, doc `me`:
    `name, timezone (IANA), language (of the brief), brief (text of brief.md), pickiness ("open" | "selective" |
    "exceptional"), maxNewPerRun, searchSchedule (human text, e.g. "Monday and Thursday mornings"), cvEnabled,
-   cvSchedule (human text, omit if off), learned ([]), configuredAt (ISO now), boardUrl, kitVersion ("0.2.1")`.
+   cvSchedule (human text, omit if off), learned ([]), configuredAt (ISO now), boardUrl, kitVersion (the `version` in `../../.claude-plugin/plugin.json`)`.
 3. **CV details** (if CVs on): `write_db` `set` collection `profile`, doc `cv`:
    `{masterYaml: <full text of master_cv.yaml>, updatedAt: <ISO now>}`.
 4. **Check**: `read_db` `get` profile/me — the brief must be there.
@@ -100,7 +100,8 @@ Ask: "Shall I build it like this?" Build nothing until they say yes. Changes →
 - The board is in their Claude artifacts as "Job Swipe": pin it, and use the Claude phone app to swipe.
 - Right = interested, left = not, ✓ = already applied; a short "why" note makes the next search smarter.
 - ⚙ on the board shows their search brief, and they can edit it there any time.
-- Liked jobs get a CV by the evening under ♥ ("Open CV"); CVs are deleted after 7 days.
+- Liked jobs get a CV under ♥ ("Open CV") the next time the CV task runs (tell them when, from their CV
+  schedule, e.g. "weekday evenings, so a job liked on Saturday gets its CV on Monday"); CVs are deleted after 7 days.
 - Changed your mind? ♥ → "Passed" lists every job you swiped left on, with "Move to interested".
 - Anything else: "configure Job Swipe" again.
 

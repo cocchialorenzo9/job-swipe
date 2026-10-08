@@ -1,6 +1,6 @@
 {
   "name": "job-swipe",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Your own Job Swipe board: Claude searches for matching jobs on a schedule, you swipe right or left, and every liked job gets a tailored one-page CV.",
   "author": { "name": "Lorenzo Cocchia" },
   "repository": "https://github.com/cocchialorenzo9/job-swipe",

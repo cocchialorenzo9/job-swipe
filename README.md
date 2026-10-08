@@ -76,6 +76,8 @@ Claude never applies to jobs or contacts anyone for you. You always click **Appl
 | `plugins/job-swipe/skills/find-jobs` | The search: reads your brief and swipes, searches, checks each job is live on the company site, adds cards |
 | `plugins/job-swipe/skills/tailor-cvs` | Builds a one-page CV for each liked job (LaTeX, single column, readable by application systems) |
 | `plugins/job-swipe/board/job-swipe.html` | The swipe board page |
+| `plugins/job-swipe/references/board-data.md` | Rules all three skills follow when reading and writing your board |
+| `tests/` | Tests for the CV builder (`python3 -m unittest discover tests`) |
 
 Your scheduled tasks only point to these instructions; they don't copy them. When this repo gets better, the improvements reach you through plugin updates. You never redo the setup. If you don't see updates arriving, open **Customize → Plugins** and update **job-swipe** (or turn on automatic updates for its marketplace, if your app offers it).
 

@@ -13,40 +13,107 @@ Guarantees: fits the page limit (style.max_pages, default 1) (tightens spacing, 
 bullets / optional sections, and reports what it dropped), and a clean text layer
 (checked with pdftotext the way an ATS parser reads it).
 """
-import pathlib, re, shutil, subprocess, sys, unicodedata
+import importlib, os, pathlib, re, shutil, subprocess, sys, time, unicodedata
+
+ROOT = pathlib.Path(__file__).resolve().parent
+VENV = pathlib.Path.home() / ".cache" / "job-swipe" / "venv"  # used only when the system Python refuses pip installs
+APT_TIMEOUT = 540  # seconds for all installs together; stays under the 10-minute limit of one Bash tool call
+_apt_deadline = None
+_apt_timed_out = False  # a timed-out apt-get keeps running and holds the lock; later installs would just fail
+
+jinja2 = yaml = None  # imported by ensure_python_deps() from main()
+
+
+def _say(msg):
+    print(msg, file=sys.stderr, flush=True)
 
 
 def _apt(*pkgs):
-    """Best-effort apt install (fresh cloud sessions); silently does nothing where apt is unavailable."""
-    if shutil.which("apt-get"):
-        cmd = "apt-get install -y -q {0} || (apt-get update -q && apt-get install -y -q {0})".format(" ".join(pkgs))
-        subprocess.run(cmd, shell=True, capture_output=True)
-
-
-try:
-    import jinja2, yaml
-except ImportError:
-    subprocess.run([sys.executable, "-m", "pip", "install", "-q", "jinja2", "pyyaml"], capture_output=True)
+    """Best-effort apt install (fresh cloud sessions). Returns False if apt is missing, failed or timed out."""
+    global _apt_deadline, _apt_timed_out
+    if not shutil.which("apt-get") or _apt_timed_out:
+        return False
+    if _apt_deadline is None:
+        _apt_deadline = time.monotonic() + APT_TIMEOUT
+    _say("Installing " + ", ".join(pkgs) + " (first run on this machine, this can take a few minutes)...")
+    cmd = "apt-get install -y -q {0} || (apt-get update -q && apt-get install -y -q {0})".format(" ".join(pkgs))
     try:
-        import jinja2, yaml
+        r = subprocess.run(cmd, shell=True, capture_output=True, text=True,
+                           timeout=max(1, _apt_deadline - time.monotonic()))
+    except subprocess.TimeoutExpired:
+        _apt_timed_out = True
+        _say("The install timed out; it keeps going in the background.")
+        return False
+    if r.returncode:
+        _say("The install failed:\n" + ((r.stderr or "") + (r.stdout or ""))[-1500:])
+    return r.returncode == 0
+
+
+def _import_deps():
+    return importlib.import_module("jinja2"), importlib.import_module("yaml")
+
+
+def _pip(python, *extra):
+    return subprocess.run([python, "-m", "pip", "install", "-q", *extra, "jinja2", "pyyaml"],
+                          capture_output=True, text=True)
+
+
+def ensure_python_deps():
+    """Return (jinja2, yaml), installing them if needed.
+
+    Tries pip for this Python first; where that is refused (externally-managed Pythons, PEP 668) it installs
+    into a private venv and re-runs this script with that venv's Python.
+    """
+    try:
+        return _import_deps()
     except ImportError:
-        sys.exit("Missing Python packages: run `python3 -m pip install jinja2 pyyaml`, then try again.")
+        pass
+    errors = []
+    if not os.environ.get("JOB_SWIPE_VENV"):
+        r = _pip(sys.executable)
+        if r.returncode == 0:
+            importlib.invalidate_caches()
+            try:
+                return _import_deps()
+            except ImportError:
+                pass
+        errors.append(r.stderr or r.stdout)
+        py = VENV / "bin" / "python"
+        if not py.exists():
+            r = subprocess.run([sys.executable, "-m", "venv", str(VENV)], capture_output=True, text=True)
+            errors.append(r.stderr or r.stdout)
+        try:
+            r = _pip(str(py))
+        except OSError as e:  # the venv could not be created at all
+            r = subprocess.CompletedProcess([], 1, "", str(e))
+        if r.returncode != 0:
+            shutil.rmtree(VENV, ignore_errors=True)  # e.g. built without pip; start clean next time
+        else:
+            os.environ["JOB_SWIPE_VENV"] = "1"
+            os.execv(str(py), [str(py), str(pathlib.Path(__file__).resolve()), *sys.argv[1:]])
+        errors.append(r.stderr or r.stdout)
+    detail = "\n".join(e.strip() for e in errors if e and e.strip())[-1500:]
+    sys.exit(f"Missing Python packages jinja2 and pyyaml, and installing them failed.\n{detail}\n"
+             f"Install them for {sys.executable} (or in a virtual environment), then try again.")
 
-# Fresh cloud sessions may lack LaTeX or poppler; LaTeX is needed to render, poppler to count pages and check the text.
-if not shutil.which("pdflatex"):
-    _apt("texlive-latex-base", "texlive-latex-recommended", "texlive-fonts-recommended", "texlive-latex-extra")
-if not (shutil.which("pdftotext") and shutil.which("pdfinfo")):
-    _apt("poppler-utils")
-_missing = [t for t in ("pdflatex", "pdftotext", "pdfinfo", "kpsewhich") if not shutil.which(t)]
-if _missing:
-    sys.exit("Missing tools: " + ", ".join(_missing) + ". Install a LaTeX distribution (e.g. TeX Live or MacTeX) "
-             "and poppler (pdftotext/pdfinfo), then try again.")
 
-ROOT = pathlib.Path(__file__).resolve().parent
+def ensure_tools():
+    """LaTeX renders, poppler counts pages and checks the text; fresh cloud sessions may lack either."""
+    if not shutil.which("pdflatex"):
+        # enumitem and titlesec live in texlive-latex-extra on Debian/Ubuntu.
+        _apt("texlive-latex-base", "texlive-latex-recommended", "texlive-fonts-recommended", "texlive-latex-extra")
+    if not (shutil.which("pdftotext") and shutil.which("pdfinfo")):
+        _apt("poppler-utils")
+    missing = [t for t in ("pdflatex", "pdftotext", "pdfinfo", "kpsewhich") if not shutil.which(t)]
+    if missing and _apt_timed_out:
+        sys.exit("Still installing LaTeX in the background: wait 5 minutes, then run the same command again.")
+    if missing:
+        sys.exit("Missing tools: " + ", ".join(missing) + ". Install a LaTeX distribution (e.g. TeX Live or MacTeX) "
+                 "and poppler (pdftotext/pdfinfo), then try again.")
+    # Latin Modern is needed for a clean T1 text layer + euro sign.
+    if subprocess.run(["kpsewhich", "lmodern.sty"], capture_output=True, text=True).stdout.strip() == "":
+        _apt("lmodern")
 
-# Fresh cloud sessions may lack Latin Modern (needed for a clean T1 text layer + euro sign).
-if subprocess.run(["kpsewhich", "lmodern.sty"], capture_output=True, text=True).stdout.strip() == "":
-    _apt("lmodern")
 
 # Spacing presets, loosest first; the builder walks down until the CV fits on one page.
 PRESETS = [
@@ -243,8 +310,11 @@ def ats_check(pdf, master, spec):
 
 
 def main():
+    global jinja2, yaml
     if len(sys.argv) < 3:
         sys.exit(__doc__)
+    jinja2, yaml = ensure_python_deps()
+    ensure_tools()
     master = load(sys.argv[1])
     spec_path = pathlib.Path(sys.argv[2])
     spec = load(spec_path)
