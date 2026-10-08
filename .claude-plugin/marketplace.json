@@ -1,0 +1,13 @@
+{
+  "name": "job-swipe",
+  "owner": { "name": "Lorenzo Cocchia" },
+  "metadata": { "description": "Job Swipe: a swipeable job feed filled by Claude on a schedule, with tailored CVs for the jobs you like." },
+  "plugins": [
+    {
+      "name": "job-swipe",
+      "source": "./plugins/job-swipe",
+      "description": "Your own Job Swipe board: Claude searches for matching jobs on a schedule, you swipe, and every liked job gets a tailored one-page CV.",
+      "version": "0.2.0"
+    }
+  ]
+}
