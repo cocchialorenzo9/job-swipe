@@ -1,0 +1,115 @@
+# MASTER CV — every TRUE fact about one person. (This example is a made-up person.)
+# Rules for Claude:
+#  1. Only facts the person gave (their CV, their answers). Never invent numbers, tools, titles or dates.
+#  2. Plain text everywhere — build.py escapes LaTeX characters (&, %, $, #, _, €) for you.
+#  3. Bullets follow Google's XYZ formula where the facts allow it:
+#     "Accomplished [X] as measured by [Y], by doing [Z]". No honest number -> keep it qualitative.
+#  4. priority: 1 = always keep, 2 = keep if it fits (default), 3 = first to drop.
+#  5. `variants` = the same fact worded for a different angle ("track"). Same facts, different emphasis.
+
+header:
+  name: Alex Example
+  headline: Product Manager | B2B SaaS and data products
+  contact:            # shown on one line, in this order; emails and web addresses become links
+    - +49 151 0000000
+    - Berlin, Germany
+    - alex.example@example.com
+    - linkedin.com/in/alex-example
+
+style:               # the look, agreed with the person during configure. Every field is optional.
+  font: classic      # classic (LaTeX Latin Modern) | charter | palatino | sans (Helvetica-like)
+  accent: 1B6FB0     # hex colour for links (and headings if color_headings); 000000 = all black
+  color_headings: false
+  name_case: upper   # upper | as_written
+  max_pages: 1       # 1 (recommended) or 2
+  section_order: [summary, experience, education, skills, volunteering]   # students often put education first
+
+summary: >-          # optional default summary (2-3 lines). A job spec can replace it.
+  Product Manager with 4 years in B2B SaaS, from discovery and user research to shipped features.
+  Former data analyst, comfortable with SQL and close work with engineering.
+
+never_list: [Kubernetes, Kafka]   # skills the person said they could NOT defend in an interview — never put on a CV
+
+tracks:              # optional named angles; a job spec picks one with `track:`
+  product:
+    headline: Product Manager | B2B SaaS and data products
+    skills_order: [Product, Data, Tools]
+  data:
+    headline: Data Analyst | Product analytics and experimentation
+    skills_order: [Data, Tools, Product]
+    roles:
+      shopco: [dashboards, ab_tests, onboarding]
+      dataly: [reporting, sql_models]
+
+experience:
+  - id: shopco
+    title: Product Manager
+    company: ShopCo GmbH
+    location: Berlin, DE
+    dates: Mar 2023 -- Present
+    bullets:
+      - id: onboarding
+        priority: 1
+        text: >-
+          Raised trial-to-paid conversion from 9% to 13% by redesigning the onboarding flow with
+          12 customer interviews and 3 rounds of prototype testing
+        variants:
+          data: >-
+            Raised trial-to-paid conversion from 9% to 13% by finding the main onboarding drop-off
+            in funnel data and validating the fix in 3 rounds of prototype testing
+      - id: ab_tests
+        priority: 2
+        text: >-
+          Built an A/B testing routine used by 4 product teams, cutting time-to-decision from 4 weeks to 10 days
+      - id: dashboards
+        priority: 3
+        text: >-
+          Gave leadership a weekly view of product health by setting up 6 Looker dashboards
+      - id: roadmap
+        priority: 2
+        text: >-
+          Aligned sales, support and 2 engineering teams on one quarterly roadmap by running
+          impact/effort prioritization workshops
+
+  - id: dataly
+    title: Data Analyst
+    company: Dataly AG
+    location: Munich, DE
+    dates: Sep 2021 -- Feb 2023
+    bullets:
+      - id: reporting
+        priority: 2
+        text: Automated monthly revenue reporting, saving the finance team about 2 days per month
+      - id: sql_models
+        priority: 3
+        text: Wrote and maintained 40+ SQL models (dbt) behind the company's customer metrics
+
+education:
+  - id: msc
+    degree: MSc Business Informatics
+    school: Technical University of Munich
+    dates: 2019 -- 2021
+    detail: "Thesis: pricing experiments in subscription software"
+  - id: bsc
+    degree: BSc Economics
+    school: University of Bologna
+    dates: 2016 -- 2019
+    optional: true    # may be dropped to keep one page
+
+skills:              # rows, in default order. Only skills the person can defend.
+  - label: Product
+    items: [Product discovery, Roadmapping, User interviews, A/B testing, Scrum]
+  - label: Data
+    items: [SQL, dbt, Looker, Python (pandas)]
+  - label: Tools
+    items: [Jira, Figma, Amplitude]
+
+certificates: [Professional Scrum Product Owner I (2024)]
+languages: [English (fluent), German (C1), Italian (native)]
+
+extra_sections:      # optional; dropped before priority-2 bullets when space runs out
+  - id: volunteering
+    title: Volunteering
+    optional: true
+    items:
+      - "Mentor, Women in Data Berlin (2022 -- Present): 6 mentees, monthly sessions"

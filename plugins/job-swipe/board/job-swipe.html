@@ -1,0 +1,612 @@
+<title>Job Swipe</title>
+<style>
+:root{
+  --bg:#f6f5f3; --card:#ffffff; --text:#1c1b1a; --sub:#6b6864; --border:#e4e1dc;
+  --accent:#c65d3b; --like:#2f9e60; --pass:#c14848; --applied:#3b6fc6;
+  --chip-bg:#f0ede8; --shadow: 0 10px 30px -12px rgba(0,0,0,.25);
+  --cv-bg:#eaf4ee; --cv-text:#23734a;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#171615; --card:#232220; --text:#f2f0ec; --sub:#a19d97; --border:#37352f;
+    --chip-bg:#2c2a27; --shadow: 0 10px 30px -12px rgba(0,0,0,.6);
+    --cv-bg:#1f2e25; --cv-text:#7fd1a2;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#171615; --card:#232220; --text:#f2f0ec; --sub:#a19d97; --border:#37352f;
+  --chip-bg:#2c2a27; --shadow: 0 10px 30px -12px rgba(0,0,0,.6);
+  --cv-bg:#1f2e25; --cv-text:#7fd1a2;
+}
+*{box-sizing:border-box;}
+[hidden]{display:none!important;}
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  padding:24px 16px 48px; min-height:100vh;
+}
+.wrap{max-width:460px; margin:0 auto;}
+.topbar{display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:2px;}
+.topBtns{display:flex; gap:8px; flex:none;}
+h1{font-size:19px; margin:0 0 2px; letter-spacing:-.01em;}
+.sub{color:var(--sub); font-size:13px; margin:0 0 20px; line-height:1.45;}
+.pillBtn{
+  flex:none; border:1px solid var(--border); background:var(--card); color:var(--text);
+  border-radius:999px; padding:8px 12px; font-size:12.5px; font-weight:600; cursor:pointer;
+  display:flex; align-items:center; gap:6px; white-space:nowrap; font-family:inherit;
+}
+.pillBtn .badge{background:var(--like); color:#fff; border-radius:999px; padding:1px 7px; font-size:11px; min-width:16px; text-align:center;}
+.counts{display:flex; justify-content:space-between; align-items:center; gap:14px; font-size:12px; color:var(--sub); margin-bottom:18px;}
+.counts b{color:var(--text);}
+.undoBtn{border:none; background:none; color:var(--accent); font-size:12.5px; font-weight:600; cursor:pointer; padding:0; font-family:inherit;}
+.stage{position:relative; height:480px; margin-bottom:18px;}
+.card{
+  position:absolute; inset:0; background:var(--card); border:1px solid var(--border);
+  border-radius:20px; box-shadow:var(--shadow); padding:22px; display:flex; flex-direction:column;
+  touch-action:none; user-select:none; transition:transform .35s ease, opacity .35s ease;
+}
+.card.top{cursor:grab;}
+.card.top:active{cursor:grabbing;}
+.stamp{
+  position:absolute; top:24px; font-weight:800; font-size:22px; letter-spacing:.06em;
+  padding:6px 14px; border:3px solid; border-radius:10px; opacity:0; transform:rotate(-12deg);
+  text-transform:uppercase; pointer-events:none;
+}
+.stamp.like{right:20px; color:var(--like); border-color:var(--like);}
+.stamp.pass{left:20px; color:var(--pass); border-color:var(--pass); transform:rotate(12deg);}
+.company{font-size:13px; color:var(--accent); font-weight:600; margin-bottom:4px;}
+.title{font-size:20px; font-weight:700; line-height:1.25; margin-bottom:8px;}
+.meta{font-size:13px; color:var(--sub); margin-bottom:14px;}
+.blurb{font-size:14px; line-height:1.5; color:var(--text); overflow-y:auto; flex:1; margin-bottom:12px;}
+.why{font-size:12.5px; background:var(--chip-bg); border-radius:10px; padding:10px 12px; color:var(--sub); margin-bottom:10px;}
+.why b{color:var(--text);}
+.tags{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:4px;}
+.tag{font-size:11px; background:var(--chip-bg); color:var(--sub); padding:4px 9px; border-radius:999px;}
+.link{font-size:12.5px; color:var(--accent); text-decoration:none; font-weight:600;}
+.empty{display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center; color:var(--sub); gap:8px; padding:0 20px; line-height:1.5;}
+.empty .big{font-size:34px;}
+.controls{display:flex; justify-content:center; align-items:center; gap:16px; margin-bottom:10px;}
+button.round{
+  width:56px; height:56px; border-radius:50%; border:1px solid var(--border); background:var(--card);
+  font-size:22px; cursor:pointer; box-shadow:0 2px 8px rgba(0,0,0,.12); color:var(--text);
+}
+button.round.pass{color:var(--pass);}
+button.round.like{color:var(--like);}
+button.round.applied{width:44px; height:44px; font-size:16px; color:var(--applied);}
+button.round:disabled{opacity:.4; cursor:default;}
+button.round:focus-visible,.pillBtn:focus-visible,.undoBtn:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+.note-row{display:flex; gap:8px; margin-bottom:16px;}
+.note-row input,.rejectRow input{
+  flex:1; min-width:0; border:1px solid var(--border); background:var(--card); color:var(--text);
+  border-radius:10px; padding:9px 11px; font-size:13px; font-family:inherit;
+}
+.note-row button{border:none; background:var(--chip-bg); color:var(--text); border-radius:10px; padding:0 14px; font-size:13px; cursor:pointer; font-family:inherit;}
+.stats{border-top:1px solid var(--border); padding-top:14px; font-size:12.5px; color:var(--sub);}
+.stats .row{display:flex; justify-content:space-between; padding:3px 0;}
+
+.panelHeader{display:flex; align-items:center; gap:10px; margin-bottom:16px;}
+.backBtn{border:none; background:none; color:var(--accent); font-size:13px; font-weight:600; cursor:pointer; padding:0; font-family:inherit;}
+.panelHeader h2{font-size:16px; margin:0;}
+.likedCard{border:1px solid var(--border); background:var(--card); border-radius:16px; padding:16px; margin-bottom:12px; box-shadow:var(--shadow);}
+.likedCard .title{font-size:16px; margin-bottom:6px;}
+.likedCard .meta{margin-bottom:12px;}
+.cvRow{
+  display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;
+  background:var(--chip-bg); border-radius:10px; padding:9px 12px; margin-bottom:10px; font-size:12.5px; color:var(--sub);
+}
+.cvRow.ready{background:var(--cv-bg); color:var(--cv-text);}
+.cvRow b{font-weight:700;}
+.cvBtns{display:flex; align-items:center; gap:8px;}
+.cvOpen{color:var(--cv-text); font-weight:700; background:none; border:none; padding:4px 0; font-size:12.5px; font-family:inherit; cursor:pointer;}
+.cvDl{background:var(--cv-text); color:var(--card); border:none; border-radius:8px; padding:6px 11px; font-size:12.5px; font-weight:700; font-family:inherit; cursor:pointer; white-space:nowrap;}
+.cvDl:disabled{opacity:.6; cursor:default;}
+.cvNote{font-size:12px; color:var(--sub); margin:-4px 0 10px; line-height:1.45;}
+.cvViewer{position:fixed; inset:0; z-index:50; background:rgba(0,0,0,.8); display:flex; flex-direction:column;}
+.cvViewer[hidden]{display:none!important;}
+.cvBar{display:flex; align-items:center; gap:8px; padding:10px 16px; background:var(--card); border-bottom:1px solid var(--border);}
+.cvBar .cvTitle{flex:1; min-width:0; font-size:13px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.cvBar button{border:1px solid var(--border); background:var(--chip-bg); color:var(--text); border-radius:10px; padding:8px 12px; font-size:12.5px; font-weight:600; cursor:pointer; white-space:nowrap; font-family:inherit;}
+.cvBar button.primary{background:var(--accent); border-color:var(--accent); color:#fff;}
+.cvBar button:disabled{opacity:.5; cursor:default;}
+.cvBody{flex:1; overflow:auto; padding:16px; display:flex; flex-direction:column; align-items:center; gap:12px;}
+.cvBody canvas{width:100%; max-width:820px; height:auto; background:#fff; box-shadow:var(--shadow); border-radius:4px;}
+.cvBody iframe{width:100%; max-width:820px; flex:1; min-height:70vh; border:none; background:#fff; border-radius:4px;}
+.cvMsg{color:#fff; font-size:13px; text-align:center; padding:40px 16px;}
+.likedActions{display:flex; gap:8px; align-items:stretch; flex-wrap:wrap;}
+.applyBtn{flex:1; min-width:90px; text-align:center; background:var(--accent); color:#fff; text-decoration:none; font-weight:700; font-size:13px; padding:10px 0; border-radius:10px;}
+.applyBtn.disabled{background:var(--chip-bg); color:var(--sub); cursor:default;}
+.markAppliedBtn{border:1px solid var(--border); background:var(--chip-bg); color:var(--text); border-radius:10px; padding:10px 14px; font-size:12.5px; cursor:pointer; white-space:nowrap; font-family:inherit;}
+.rejectBtn{border:1px solid var(--pass); background:transparent; color:var(--pass); border-radius:10px; padding:10px 14px; font-size:12.5px; cursor:pointer; white-space:nowrap; font-family:inherit;}
+.markAppliedBtn:disabled,.rejectBtn:disabled{opacity:.5; cursor:default;}
+.rejectRow{display:none; gap:8px; margin-top:10px;}
+.rejectRow.open{display:flex;}
+.rejectRow button{border:none; background:var(--pass); color:#fff; border-radius:10px; padding:0 14px; font-size:12.5px; cursor:pointer; font-weight:600; white-space:nowrap; font-family:inherit;}
+.segTabs{display:flex; gap:4px; background:var(--chip-bg); border-radius:999px; padding:3px; margin-bottom:16px;}
+.segTabs button{flex:1; border:none; background:transparent; color:var(--sub); border-radius:999px; padding:8px 10px; font-size:12.5px; font-weight:600; cursor:pointer; font-family:inherit;}
+.segTabs button[aria-selected="true"]{background:var(--card); color:var(--text); box-shadow:0 1px 4px rgba(0,0,0,.12);}
+.segTabs button:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+.passedNote{font-size:12.5px; background:var(--chip-bg); border-radius:10px; padding:9px 12px; color:var(--sub); margin-bottom:10px; line-height:1.45;}
+.restoreBtn{border:1px solid var(--like); background:transparent; color:var(--like); border-radius:10px; padding:10px 14px; font-size:12.5px; font-weight:600; cursor:pointer; white-space:nowrap; font-family:inherit;}
+.restoreBtn:disabled{opacity:.5; cursor:default;}
+.panelEmpty{display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; color:var(--sub); gap:8px; padding:60px 20px; font-size:13px;}
+.panelEmpty .big{font-size:34px;}
+
+.prefsBox{border:1px solid var(--border); background:var(--card); border-radius:16px; padding:16px; margin-bottom:14px;}
+.prefsBox h3{font-size:14px; margin:0 0 6px;}
+.prefsBox p{font-size:12.5px; color:var(--sub); margin:0 0 10px; line-height:1.45;}
+.prefsBox textarea{
+  width:100%; min-height:260px; resize:vertical; border:1px solid var(--border); background:var(--bg); color:var(--text);
+  border-radius:10px; padding:10px 12px; font-size:13px; line-height:1.5; font-family:inherit;
+}
+.prefsActions{display:flex; align-items:center; gap:10px; margin-top:10px;}
+.prefsActions button{border:none; background:var(--accent); color:#fff; border-radius:10px; padding:9px 16px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit;}
+.prefsActions button:disabled{opacity:.5; cursor:default;}
+.prefsActions span{font-size:12.5px; color:var(--sub);}
+.kv{display:flex; justify-content:space-between; gap:12px; font-size:12.5px; padding:4px 0; color:var(--sub);}
+.kv b{color:var(--text); font-weight:600; text-align:right;}
+</style>
+
+<div class="wrap">
+  <div class="topbar">
+    <div>
+      <h1 id="hello">Job Swipe</h1>
+      <p class="sub" id="subline">Swipe right on jobs you like, left on the rest. Your swipes teach the next search.</p>
+    </div>
+    <div class="topBtns">
+      <button class="pillBtn" id="btnShowPrefs" title="What I'm looking for" aria-label="Preferences">⚙</button>
+      <button class="pillBtn" id="btnShowLiked" title="Jobs you liked">♥ <span class="badge" id="likedBadge">0</span></button>
+    </div>
+  </div>
+
+  <div id="swipeView">
+    <div class="counts"><span id="counts"></span><button class="undoBtn" id="btnUndo" hidden>↶ Undo</button></div>
+    <div class="stage" id="stage"></div>
+    <div class="controls" id="controls" hidden>
+      <button class="round pass" id="btnPass" title="Not interested" aria-label="Not interested">✕</button>
+      <button class="round applied" id="btnApplied" title="Already applied" aria-label="Already applied">✓</button>
+      <button class="round like" id="btnLike" title="Interested" aria-label="Interested">♥</button>
+    </div>
+    <div class="note-row" id="noteRow" hidden>
+      <input id="noteInput" placeholder="Optional: why? (helps the next search)" maxlength="140" />
+      <button id="noteSave">Save note</button>
+    </div>
+    <div class="stats" id="stats"></div>
+  </div>
+
+  <div id="likedPanel" hidden>
+    <div class="panelHeader">
+      <button class="backBtn" data-back>← Back</button>
+      <h2 id="likedHeading">Jobs you're interested in</h2>
+    </div>
+    <div class="segTabs" role="tablist" aria-label="Saved jobs">
+      <button role="tab" id="tabLiked" aria-selected="true">♥ Interested</button>
+      <button role="tab" id="tabPassed" aria-selected="false">✕ Passed</button>
+    </div>
+    <div id="likedList"></div>
+  </div>
+
+  <div id="prefsPanel" hidden>
+    <div class="panelHeader">
+      <button class="backBtn" data-back>← Back</button>
+      <h2>What I'm looking for</h2>
+    </div>
+    <div class="prefsBox">
+      <h3>Search brief</h3>
+      <p>The search reads this every time it runs. Change anything in your own words: roles, cities, salary, deal-breakers, companies to avoid.</p>
+      <textarea id="briefInput" aria-label="Search brief" placeholder="Loading…"></textarea>
+      <div class="prefsActions"><button id="briefSave" disabled>Save</button><span id="briefMsg"></span></div>
+    </div>
+    <div class="prefsBox" id="scheduleBox">
+      <h3>Schedule</h3>
+      <div id="scheduleRows"></div>
+      <p style="margin-top:10px">To change the schedule or your CV details, ask Claude: “configure Job Swipe”.</p>
+    </div>
+  </div>
+
+  <div class="cvViewer" id="cvViewer" hidden role="dialog" aria-modal="true" aria-label="Tailored CV">
+    <div class="cvBar">
+      <div class="cvTitle" id="cvTitle">CV</div>
+      <button class="primary" id="cvSave">Save PDF</button>
+      <button id="cvClose">Close</button>
+    </div>
+    <div class="cvBody" id="cvBody"></div>
+  </div>
+</div>
+
+<script>
+let db = null;
+let profile = {};       // profile/me: {name, brief, searchSchedule, cvEnabled, cvSchedule, ...}
+let pending = [];       // [{id, data}]
+let current = null;
+let lastSwipe = null;   // {id, data} — for undo
+let pendingNote = "";
+
+const $ = id => document.getElementById(id);
+const stage = $("stage"), controls = $("controls"), countsEl = $("counts"), statsEl = $("stats");
+const noteRow = $("noteRow"), noteInput = $("noteInput");
+const views = {swipe: $("swipeView"), liked: $("likedPanel"), prefs: $("prefsPanel")};
+
+function esc(s){
+  if(s === null || s === undefined) return "";
+  return String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+function safeUrl(u){ return /^https?:\/\//i.test(u || "") ? u : ""; }
+function show(name){ for(const k in views) views[k].hidden = (k !== name); window.scrollTo(0,0); }
+function searchWhen(){ return profile.searchSchedule || "at the next search"; }
+
+function applyProfile(){
+  const first = (profile.name || "").trim().split(/\s+/)[0];
+  $("hello").textContent = first ? "Job Swipe · " + first : "Job Swipe";
+  let s = "Right = interested, left = pass. New jobs arrive " + searchWhen() + ".";
+  if(profile.cvEnabled) s += " Liked jobs get a tailored CV " + (profile.cvSchedule || "at the next CV run") + ".";
+  $("subline").textContent = s;
+}
+
+function renderEmpty(msg){
+  stage.innerHTML = '<div class="empty"><div class="big">🎉</div><div>' + msg + '</div></div>';
+  controls.hidden = true; noteRow.hidden = true;
+}
+
+function renderCard(job){
+  const d = job.data;
+  const tags = (Array.isArray(d.tags) ? d.tags : []).map(t => '<span class="tag">' + esc(t) + '</span>').join("");
+  const url = safeUrl(d.url);
+  stage.innerHTML =
+    '<div class="card top" id="cardEl">' +
+      '<div class="stamp like" id="stampLike">Interested</div>' +
+      '<div class="stamp pass" id="stampPass">Pass</div>' +
+      '<div class="company">' + esc(d.company || "Unknown company") + '</div>' +
+      '<div class="title">' + esc(d.title || "Untitled role") + '</div>' +
+      '<div class="meta">' + esc(d.location || "") + (d.remote ? " · Remote" : "") + (d.postedDate ? " · " + esc(d.postedDate) : "") + '</div>' +
+      '<div class="blurb">' + esc(d.blurb || "") + '</div>' +
+      (d.matchReason ? '<div class="why"><b>Why it matched:</b> ' + esc(d.matchReason) + '</div>' : "") +
+      '<div class="tags">' + tags + '</div>' +
+      (url ? '<a class="link" href="' + esc(url) + '" target="_blank" rel="noopener">View full posting ↗</a>' : "") +
+    '</div>';
+  controls.hidden = false; noteRow.hidden = false;
+  noteInput.value = ""; noteInput.placeholder = "Optional: why? (helps the next search)"; pendingNote = "";
+  attachDrag();
+}
+
+let dragCleanup = null;
+function attachDrag(){
+  if(dragCleanup) dragCleanup();
+  const cardEl = $("cardEl");
+  if(!cardEl) return;
+  let startX = 0, dx = 0, dragging = false;
+  const down = e => { if(e.target.closest("a")) return; dragging = true; startX = e.clientX; dx = 0; cardEl.style.transition = "none"; };
+  const move = e => {
+    if(!dragging) return;
+    dx = e.clientX - startX;
+    cardEl.style.transform = "translateX(" + dx + "px) rotate(" + (dx/18) + "deg)";
+    $("stampLike").style.opacity = Math.max(0, Math.min(1, dx/80));
+    $("stampPass").style.opacity = Math.max(0, Math.min(1, -dx/80));
+  };
+  const up = () => {
+    if(!dragging) return;
+    dragging = false; cardEl.style.transition = "";
+    if(dx > 110) doSwipe("liked");
+    else if(dx < -110) doSwipe("disliked");
+    else { cardEl.style.transform = ""; $("stampLike").style.opacity = 0; $("stampPass").style.opacity = 0; }
+  };
+  cardEl.addEventListener("pointerdown", down);
+  window.addEventListener("pointermove", move);
+  window.addEventListener("pointerup", up);
+  dragCleanup = () => { window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", up); };
+}
+
+function updateCounts(){ countsEl.innerHTML = '<b>' + pending.length + '</b> to review'; }
+
+async function loadPending(){
+  let snap;
+  try{
+    snap = await db.collection("jobs").where("status", "==", "pending").orderBy("addedDate", "desc").limit(100).get();
+  }catch(e){
+    snap = await db.collection("jobs").where("status", "==", "pending").limit(100).get();
+  }
+  pending = snap.docs.map(d => ({id: d.id, data: d.data()}));
+  updateCounts(); next();
+}
+
+function next(){
+  if(pending.length === 0){
+    renderEmpty("You're all caught up.<br>New matches arrive " + esc(searchWhen()) + ".");
+    updateCounts(); return;
+  }
+  current = pending[0];
+  try{ renderCard(current); }
+  catch(e){ console.error("Bad card", current && current.id, e); pending.shift(); next(); return; }
+  updateCounts();
+}
+
+async function doSwipe(status){
+  if(!current || !db) return;
+  const job = current; current = null;
+  const cardEl = $("cardEl");
+  if(cardEl){
+    const dir = status === "liked" ? 1 : (status === "disliked" ? -1 : 0);
+    cardEl.style.transform = "translateX(" + (dir*520) + "px) rotate(" + (dir*20) + "deg)";
+    cardEl.style.opacity = "0";
+  }
+  const payload = { status, swipedAt: new Date().toISOString() };
+  if(status === "applied") payload.appliedAt = payload.swipedAt;
+  if(pendingNote || noteInput.value.trim()) payload.note = pendingNote || noteInput.value.trim();
+  lastSwipe = {id: job.id, data: job.data};
+  $("btnUndo").hidden = false;
+  try{ await db.doc("jobs/" + job.id).update(payload); }catch(e){ console.error(e); }
+  pending.shift();
+  setTimeout(() => { next(); loadStats(); }, 220);
+}
+
+async function undo(){
+  if(!lastSwipe || !db) return;
+  const {id, data} = lastSwipe; lastSwipe = null;
+  $("btnUndo").hidden = true;
+  try{ await db.doc("jobs/" + id).set(Object.assign({}, data)); }catch(e){ console.error(e); return; }
+  pending.unshift({id, data}); next(); loadStats();
+}
+
+$("btnLike").addEventListener("click", () => doSwipe("liked"));
+$("btnPass").addEventListener("click", () => doSwipe("disliked"));
+$("btnApplied").addEventListener("click", () => doSwipe("applied"));
+$("btnUndo").addEventListener("click", undo);
+$("noteSave").addEventListener("click", () => {
+  pendingNote = noteInput.value.trim();
+  noteInput.value = "";
+  noteInput.placeholder = pendingNote ? "Saved: it goes with your next swipe" : "Optional: why? (helps the next search)";
+});
+document.addEventListener("keydown", e => {
+  if(views.swipe.hidden || !current || e.target.matches("input,textarea")) return;
+  if(e.key === "ArrowRight") doSwipe("liked");
+  if(e.key === "ArrowLeft") doSwipe("disliked");
+});
+
+async function loadStats(){
+  if(!db) return;
+  const count = async s => (await db.collection("jobs").where("status", "==", s).limit(1000).get()).size;
+  const [liked, applied, disliked] = await Promise.all([count("liked"), count("applied"), count("disliked")]);
+  statsEl.innerHTML =
+    '<div class="row"><span>Interested</span><b>' + liked + '</b></div>' +
+    '<div class="row"><span>Applied</span><b>' + applied + '</b></div>' +
+    '<div class="row"><span>Passed</span><b>' + disliked + '</b></div>';
+  $("likedBadge").textContent = liked;
+}
+
+// ---------- Liked list ----------
+const likedList = $("likedList");
+function fmtDay(iso){ try{ return new Date(iso).toLocaleDateString(undefined, {day:"numeric", month:"short"}); }catch(e){ return ""; } }
+function cvHref(d){ return d.cvUrl || (d.cvAssetId ? "/_blob/" + encodeURIComponent(d.cvAssetId) : ""); }
+
+function renderCvRow(d){
+  const href = cvHref(d);
+  const name = d.cvFileName || ("CV_" + (d.company || "job") + ".pdf");
+  if(href){
+    return '<div class="cvRow ready"><span><b>Tailored CV ready</b>' + (d.cvCreatedAt ? ' · ' + esc(fmtDay(d.cvCreatedAt)) : '') + '</span>' +
+      '<span class="cvBtns"><button class="cvOpen" data-action="open-cv" data-href="' + esc(href) + '" data-name="' + esc(name) + '">Open CV</button>' +
+      '<button class="cvDl" data-action="download-cv" data-href="' + esc(href) + '" data-name="' + esc(name) + '">⤓ Download</button></span></div>' +
+      (d.cvNote ? '<div class="cvNote">' + esc(d.cvNote) + '</div>' : '');
+  }
+  if(d.cvStatus === "expired") return '<div class="cvRow"><span>CV deleted after 7 days' + (d.cvCreatedAt ? ' (made ' + esc(fmtDay(d.cvCreatedAt)) + ')' : '') + '</span></div>';
+  if(d.cvStatus === "skipped") return '<div class="cvRow"><span>No CV made' + (d.cvNote ? ': ' + esc(d.cvNote) : '') + '</span></div>';
+  if(!profile.cvEnabled) return '';
+  return '<div class="cvRow"><span>Tailored CV arrives ' + esc(profile.cvSchedule || "at the next CV run") + '</span></div>';
+}
+
+function renderLikedCard(job){
+  const d = job.data, url = safeUrl(d.url), id = esc(job.id);
+  return '<div class="likedCard">' +
+      '<div class="company">' + esc(d.company || "Unknown company") + '</div>' +
+      '<div class="title">' + esc(d.title || "Untitled role") + '</div>' +
+      '<div class="meta">' + esc(d.location || "") + (d.remote ? " · Remote" : "") + '</div>' +
+      renderCvRow(d) +
+      '<div class="likedActions">' +
+        (url ? '<a class="applyBtn" href="' + esc(url) + '" target="_blank" rel="noopener">Apply ↗</a>' : '<span class="applyBtn disabled">No link saved</span>') +
+        '<button class="markAppliedBtn" data-action="applied" data-id="' + id + '">Mark applied</button>' +
+        '<button class="rejectBtn" data-action="reject-toggle" data-id="' + id + '">Pass</button>' +
+      '</div>' +
+      '<div class="rejectRow" data-row-id="' + id + '">' +
+        '<input type="text" data-note-id="' + id + '" placeholder="Optional: why?" maxlength="140" />' +
+        '<button data-action="reject-confirm" data-id="' + id + '">Confirm pass</button>' +
+      '</div>' +
+    '</div>';
+}
+
+function renderPassedCard(job){
+  const d = job.data, url = safeUrl(d.url), id = esc(job.id);
+  return '<div class="likedCard">' +
+      '<div class="company">' + esc(d.company || "Unknown company") + '</div>' +
+      '<div class="title">' + esc(d.title || "Untitled role") + '</div>' +
+      '<div class="meta">' + esc(d.location || "") + (d.remote ? " · Remote" : "") + (d.swipedAt ? " · passed " + esc(fmtDay(d.swipedAt)) : "") + '</div>' +
+      (d.note ? '<div class="passedNote"><b>Your note:</b> ' + esc(d.note) + '</div>' : '') +
+      '<div class="likedActions">' +
+        (url ? '<a class="applyBtn" href="' + esc(url) + '" target="_blank" rel="noopener">View posting ↗</a>' : '<span class="applyBtn disabled">No link saved</span>') +
+        '<button class="restoreBtn" data-action="restore" data-id="' + id + '">♥ Move to interested</button>' +
+      '</div>' +
+    '</div>';
+}
+
+let likedTab = "liked";   // "liked" | "disliked"
+function setLikedTab(tab){
+  likedTab = tab;
+  $("tabLiked").setAttribute("aria-selected", tab === "liked");
+  $("tabPassed").setAttribute("aria-selected", tab === "disliked");
+  $("likedHeading").textContent = tab === "liked" ? "Jobs you're interested in" : "Jobs you passed on";
+  loadLikedList();
+}
+$("tabLiked").addEventListener("click", () => setLikedTab("liked"));
+$("tabPassed").addEventListener("click", () => setLikedTab("disliked"));
+
+async function loadLikedList(){
+  const tab = likedTab;
+  likedList.innerHTML = '<div class="panelEmpty">Loading…</div>';
+  let snap;
+  try{ snap = await db.collection("jobs").where("status", "==", tab).orderBy("swipedAt", "desc").limit(200).get(); }
+  catch(e){ snap = await db.collection("jobs").where("status", "==", tab).limit(200).get(); }
+  if(tab !== likedTab) return;   // user switched tabs while loading
+  const docs = snap.docs.map(d => ({id: d.id, data: d.data()}));
+  if(tab === "disliked"){
+    likedList.innerHTML = docs.length ? docs.map(renderPassedCard).join("") :
+      '<div class="panelEmpty"><div class="big">✕</div><div>No passed jobs.<br>Jobs you swipe left on show up here, in case you change your mind.</div></div>';
+    return;
+  }
+  likedList.innerHTML = docs.length ? docs.map(renderLikedCard).join("") :
+    '<div class="panelEmpty"><div class="big">♥</div><div>Nothing here yet.<br>Swipe right (or tap ♥) on a card to save it.</div></div>';
+}
+
+async function setStatus(id, payload, btn, label){
+  btn.disabled = true; btn.textContent = label;
+  try{ await db.doc("jobs/" + id).update(payload); }catch(e){ console.error(e); }
+  await loadLikedList(); await loadStats();
+}
+
+likedList.addEventListener("click", e => {
+  const b = e.target.closest("button[data-action]");
+  if(!b) return;
+  const id = b.getAttribute("data-id"), act = b.getAttribute("data-action");
+  if(act === "open-cv") return openCv(b.dataset.href, b.dataset.name);
+  if(act === "download-cv") return downloadCv(b.dataset.href, b.dataset.name, b);
+  // Clear the pass note: it explained a "no" and would mislead the next search now that it's a "yes".
+  if(act === "restore") return setStatus(id, {status: "liked", swipedAt: new Date().toISOString(), note: ""}, b, "Moving…");
+  if(act === "applied") return setStatus(id, {status: "applied", appliedAt: new Date().toISOString()}, b, "Marking…");
+  const row = likedList.querySelector('.rejectRow[data-row-id="' + CSS.escape(id) + '"]');
+  if(act === "reject-toggle" && row){ row.classList.toggle("open"); if(row.classList.contains("open")) row.querySelector("input").focus(); return; }
+  if(act === "reject-confirm"){
+    const payload = {status: "disliked", swipedAt: new Date().toISOString()};
+    const note = row ? row.querySelector("input").value.trim() : "";
+    if(note) payload.note = note;
+    return setStatus(id, payload, b, "Passing…");
+  }
+});
+
+// ---------- CV viewer (a new tab can't reach the board's stored files, so render here) ----------
+const cvViewer = $("cvViewer"), cvBody = $("cvBody"), cvTitle = $("cvTitle"), cvSaveBtn = $("cvSave");
+let cvCurrent = null, pdfjsPromise = null;
+
+function loadPdfjs(){
+  if(pdfjsPromise) return pdfjsPromise;
+  pdfjsPromise = new Promise((resolve, reject) => {
+    const s = document.createElement("script");
+    s.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+    s.onload = () => { try{ window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"; resolve(window.pdfjsLib); }catch(e){ reject(e); } };
+    s.onerror = () => reject(new Error("pdf.js failed to load"));
+    document.head.appendChild(s);
+  });
+  pdfjsPromise.catch(() => { pdfjsPromise = null; });
+  return pdfjsPromise;
+}
+function cvMsg(t){ cvBody.innerHTML = ""; const p = document.createElement("div"); p.className = "cvMsg"; p.textContent = t; cvBody.appendChild(p); }
+async function fetchBlob(href){
+  const res = await fetch(href);
+  if(!res.ok) throw new Error("HTTP " + res.status);
+  const blob = await res.blob();
+  if(!blob.size) throw new Error("empty file");
+  return blob;
+}
+async function openCv(href, name){
+  cvCurrent = null; cvTitle.textContent = name; cvSaveBtn.disabled = true; cvSaveBtn.textContent = "Save PDF";
+  cvViewer.hidden = false; document.body.style.overflow = "hidden"; cvMsg("Loading CV…");
+  let blob;
+  try{ blob = await fetchBlob(href); }
+  catch(e){ cvMsg("Couldn't load this CV (" + (e && e.message || "error") + "). It may have been deleted."); return; }
+  cvCurrent = {blob, name}; cvSaveBtn.disabled = false;
+  try{
+    const pdfjs = await loadPdfjs();
+    const doc = await pdfjs.getDocument({data: new Uint8Array(await blob.arrayBuffer())}).promise;
+    cvBody.innerHTML = "";
+    const scale = Math.min(3, (window.devicePixelRatio || 1) * 1.6);
+    for(let i = 1; i <= doc.numPages; i++){
+      const page = await doc.getPage(i), vp = page.getViewport({scale});
+      const c = document.createElement("canvas");
+      c.width = vp.width; c.height = vp.height; c.setAttribute("role", "img"); c.setAttribute("aria-label", "CV page " + i);
+      cvBody.appendChild(c);
+      await page.render({canvasContext: c.getContext("2d"), viewport: vp}).promise;
+    }
+  }catch(e){
+    cvBody.innerHTML = "";
+    const f = document.createElement("iframe");
+    f.title = "CV preview"; f.src = URL.createObjectURL(new Blob([blob], {type: "application/pdf"}));
+    cvBody.appendChild(f);
+  }
+}
+function closeCv(){ cvViewer.hidden = true; document.body.style.overflow = ""; cvBody.innerHTML = ""; cvCurrent = null; }
+
+async function saveBlob(blob, rawName){
+  const name = /\.pdf$/i.test(rawName) ? rawName : rawName + ".pdf";
+  let downloads = null;
+  try{ downloads = await claude.use("downloads"); }catch(e){ downloads = null; }
+  if(!downloads){
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    return "saved";
+  }
+  try{ await downloads.save({filename: name, data: blob}); return "saved"; }
+  catch(e){ return (e && e.code === "declined") ? "declined" : "unavailable"; }
+}
+async function downloadCv(href, name, btn){
+  const label = "⤓ Download";
+  btn.disabled = true; btn.textContent = "Loading…";
+  let r;
+  try{ r = await saveBlob(await fetchBlob(href), name); }catch(e){ r = "missing"; }
+  btn.textContent = r === "saved" ? "Saved ✓" : r === "declined" ? label : r === "missing" ? "CV not found" : "Save unavailable";
+  setTimeout(() => { btn.textContent = label; btn.disabled = false; }, 2500);
+}
+cvSaveBtn.addEventListener("click", async () => {
+  if(!cvCurrent) return;
+  cvSaveBtn.disabled = true;
+  const r = await saveBlob(cvCurrent.blob, cvCurrent.name);
+  cvSaveBtn.textContent = r === "saved" ? "Saved" : r === "declined" ? "Save PDF" : "Save unavailable";
+  cvSaveBtn.disabled = r === "unavailable";
+});
+$("cvClose").addEventListener("click", closeCv);
+cvViewer.addEventListener("click", e => { if(e.target === cvViewer) closeCv(); });
+document.addEventListener("keydown", e => { if(e.key === "Escape" && !cvViewer.hidden) closeCv(); });
+
+// ---------- Preferences ----------
+const briefInput = $("briefInput"), briefSave = $("briefSave"), briefMsg = $("briefMsg");
+function renderPrefs(){
+  briefInput.value = profile.brief || "";
+  briefInput.placeholder = "Describe the jobs you want: roles, cities, remote or not, salary, deal-breakers…";
+  briefSave.disabled = true; briefMsg.textContent = profile.briefUpdatedAt ? "Last saved " + fmtDay(profile.briefUpdatedAt) : "";
+  const rows = [["New jobs", profile.searchSchedule || "not scheduled"],
+                ["Tailored CVs", profile.cvEnabled ? (profile.cvSchedule || "on") : "off"],
+                ["Time zone", profile.timezone || "—"]];
+  $("scheduleRows").innerHTML = rows.map(([k, v]) => '<div class="kv"><span>' + esc(k) + '</span><b>' + esc(v) + '</b></div>').join("");
+}
+briefInput.addEventListener("input", () => { briefSave.disabled = false; briefMsg.textContent = ""; });
+briefSave.addEventListener("click", async () => {
+  briefSave.disabled = true; briefMsg.textContent = "Saving…";
+  const patch = {brief: briefInput.value.trim(), briefUpdatedAt: new Date().toISOString()};
+  try{
+    const ref = db.doc("profile/me");
+    const snap = await ref.get();
+    if(snap.exists) await ref.update(patch); else await ref.set(patch);
+    Object.assign(profile, patch);
+    briefMsg.textContent = "Saved. The next search will use this.";
+  }catch(e){ briefMsg.textContent = "Couldn't save. Try again."; briefSave.disabled = false; }
+});
+
+// ---------- Navigation + start ----------
+$("btnShowLiked").addEventListener("click", () => { show("liked"); setLikedTab("liked"); });
+$("btnShowPrefs").addEventListener("click", () => { show("prefs"); renderPrefs(); });
+document.querySelectorAll("[data-back]").forEach(b => b.addEventListener("click", () => show("swipe")));
+
+(async () => {
+  renderEmpty("Loading…");
+  try{ db = await claude.use("db"); }catch(e){ db = null; }
+  if(!db){ renderEmpty("Can't reach this board's storage in this view.<br>Open it from your Claude account."); return; }
+  try{
+    const snap = await db.doc("profile/me").get();
+    profile = snap.exists ? (snap.data() || {}) : {};
+  }catch(e){ profile = {}; }
+  applyProfile();
+  if(!profile.brief && !profile.name){
+    renderEmpty("This board isn't set up yet.<br>Ask Claude: “configure Job Swipe”.");
+  }else{
+    await loadPending();
+  }
+  await loadStats();
+})();
+</script>

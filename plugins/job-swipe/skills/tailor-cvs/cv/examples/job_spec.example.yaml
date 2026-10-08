@@ -1,0 +1,20 @@
+# JOB SPEC — how to show the master CV for ONE job. Every field is optional.
+# Plain text everywhere (no LaTeX escaping needed).
+company: Example Corp                  # used in the file name: <Name>_CV_Example_Corp.pdf
+track: product                         # one of the master's `tracks` (picks headline, skill order, default bullets)
+headline: Senior Product Manager | Data-driven B2B SaaS
+summary: >-                            # mirror the posting's language, truthfully, 2-3 lines
+  Product Manager with 4 years in B2B SaaS who pairs customer discovery with hard data:
+  SQL, A/B testing and funnel analysis. Used to aligning sales, support and engineering.
+roles:                                 # role id -> bullet ids, in display order. Roles not listed are hidden.
+  shopco: [onboarding, roadmap, ab_tests]
+  dataly: [reporting]
+overrides:                             # optional rewording of a bullet for this job (SAME facts!)
+  roadmap: >-
+    Aligned sales, support and 2 engineering teams on one quarterly B2B roadmap by running
+    impact/effort prioritization workshops
+skills_front:                          # move posting keywords to the front of a row (only re-orders, never adds)
+  Product: [A/B testing, Roadmapping]
+pinned: [onboarding]                   # never drop these to fit the page
+hide_sections: []                      # extra_sections ids to leave out
+keywords: [roadmap, B2B, A/B testing, SQL, stakeholder, discovery, Kubernetes]   # posting keywords to check
