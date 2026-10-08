@@ -31,7 +31,7 @@ Then install the **job-swipe** plugin from that list.
 Start a new task and type:
 
 ```
-/job-swipe:configure
+/job-swipe-configure
 ```
 
 First, Claude asks for **your current CV** (PDF or Word). Add anything else that helps, like a LinkedIn PDF, a portfolio, or a job you'd love. Then it interviews you in short rounds about:
@@ -51,7 +51,7 @@ Open **Scheduled tasks** in Claude and open each "Job Swipe" task. If **Automati
 
 ```
 Configure Job Swipe for me. Run: git clone --depth 1 https://github.com/cocchialorenzo9/job-swipe /tmp/job-swipe
-then follow /tmp/job-swipe/plugins/job-swipe/skills/configure/SKILL.md
+then follow /tmp/job-swipe/plugins/job-swipe/skills/job-swipe-configure/SKILL.md
 ```
 
 ---
@@ -60,7 +60,7 @@ then follow /tmp/job-swipe/plugins/job-swipe/skills/configure/SKILL.md
 
 - **Find your board:** it's in your Claude artifacts as "Job Swipe". Pin it so it's easy to find on your phone.
 - **Change what you're looking for:** tap **⚙** on the board and edit your search brief. The next search uses it.
-- **Change anything else** (how often, a new job on your CV, the CV look, CVs on or off, pause): run `/job-swipe:configure` again. Claude sees your existing board and only asks about what you want to change.
+- **Change anything else** (how often, a new job on your CV, the CV look, CVs on or off, pause): run `/job-swipe-configure` again. Claude sees your existing board and only asks about what you want to change.
 - **Your data:** your board is private to your Claude account. Nobody else (including whoever shared this with you) can see your jobs, swipes or CV. CVs on the board are deleted after 7 days.
 - **Usage:** each search uses a fair amount of your Claude usage. Twice a week is a good balance. The CV task stops right away on days with nothing new.
 
@@ -72,7 +72,7 @@ Claude never applies to jobs or contacts anyone for you. You always click **Appl
 
 | Part | What it does |
 |---|---|
-| `plugins/job-swipe/skills/configure` | The interview (in the style of [grilling](https://github.com/mattpocock/skills)), creating your board, scheduling, and later changes |
+| `plugins/job-swipe/skills/job-swipe-configure` | The interview (in the style of [grilling](https://github.com/mattpocock/skills)), creating your board, scheduling, and later changes |
 | `plugins/job-swipe/skills/find-jobs` | The search: reads your brief and swipes, searches, checks each job is live on the company site, adds cards |
 | `plugins/job-swipe/skills/tailor-cvs` | Builds a one-page CV for each liked job (LaTeX, single column, readable by application systems) |
 | `plugins/job-swipe/board/job-swipe.html` | The swipe board page |

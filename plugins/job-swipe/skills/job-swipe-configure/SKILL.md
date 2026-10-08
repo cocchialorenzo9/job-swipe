@@ -1,6 +1,6 @@
 ---
-name: configure
-description: Configures a personal Job Swipe board — a swipeable job feed that a scheduled search fills with matching jobs, plus a tailored one-page CV for every liked job. Runs a thorough interview first (CV facts, target jobs, rhythm, CV look), then builds or updates everything. Use for "/job-swipe:configure", "set up Job Swipe", "configure Job Swipe", "change my Job Swipe settings", "update my CV details for Job Swipe", "search more/less often", "pause Job Swipe", or when given a Job Swipe board link to reconfigure.
+name: job-swipe-configure
+description: Configures a personal Job Swipe board — a swipeable job feed that a scheduled search fills with matching jobs, plus a tailored one-page CV for every liked job. Runs a thorough interview first (CV facts, target jobs, rhythm, CV look), then builds or updates everything. Use for "/job-swipe-configure", "/job-swipe:job-swipe-configure", "set up Job Swipe", "configure Job Swipe", "change my Job Swipe settings", "update my CV details for Job Swipe", "search more/less often", "pause Job Swipe", or when given a Job Swipe board link to reconfigure.
 ---
 
 # Job Swipe — configure
