@@ -1,5 +1,5 @@
 {
-  "name": "job-swipe",
+  "name": "cocchialorenzo9",
   "owner": { "name": "Lorenzo Cocchia" },
   "metadata": { "description": "Job Swipe: a swipeable job feed filled by Claude on a schedule, with tailored CVs for the jobs you like." },
   "plugins": [
