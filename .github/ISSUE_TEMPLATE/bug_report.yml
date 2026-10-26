@@ -1,0 +1,36 @@
+name: Something isn't working
+description: A search, a CV, the board or the setup did something wrong.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. **Never paste your CV, contact details, board link or search brief here**: issues are public.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where were you?
+      options:
+        - Claude desktop app
+        - Claude phone app
+        - Claude on the web
+        - A scheduled task (it ran on its own)
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Board version
+      description: On your board, tap ⚙ and copy "Board version". No such row? Write "older than 0.3.0".
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else?
+      description: Screenshots are welcome, with personal details blurred.

@@ -79,7 +79,9 @@ Ask: "Shall I build it like this?" Build nothing until they say yes. Changes →
 2. **Profile**: `write_db` `set` collection `profile`, doc `me`:
    `name, timezone (IANA), language (of the brief), brief (text of brief.md), pickiness ("open" | "selective" |
    "exceptional"), maxNewPerRun, searchSchedule (human text, e.g. "Monday and Thursday mornings"), cvEnabled,
-   cvSchedule (human text, omit if off), learned ([]), configuredAt (ISO now), boardUrl, kitVersion (the `version` in `../../.claude-plugin/plugin.json`)`.
+   cvSchedule (human text, omit if off), learned ([]), skippedPostings ([]), configuredAt (ISO now), boardUrl, kitVersion (the `version` in `../../.claude-plugin/plugin.json`),
+   boardVersion (the `BOARD_VERSION` in `../../board/job-swipe.html`; when reusing a board, keep its old value;
+   nothing reads it yet: it is kept so a later update can tell which page a board runs)`.
 3. **CV details** (if CVs on): `write_db` `set` collection `profile`, doc `cv`:
    `{masterYaml: <full text of master_cv.yaml>, updatedAt: <ISO now>}`.
 4. **Check**: `read_db` `get` profile/me — the brief must be there.

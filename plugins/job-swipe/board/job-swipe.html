@@ -1,3 +1,5 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Job Swipe</title>
 <style>
 :root{
@@ -34,7 +36,7 @@ h1{font-size:19px; margin:0 0 2px; letter-spacing:-.01em;}
 .sub{color:var(--sub); font-size:13px; margin:0 0 20px; line-height:1.45;}
 .pillBtn{
   flex:none; border:1px solid var(--border); background:var(--card); color:var(--text);
-  border-radius:999px; padding:8px 12px; font-size:12.5px; font-weight:600; cursor:pointer;
+  border-radius:999px; padding:8px 12px; font-size:12.5px; font-weight:600; cursor:pointer; min-height:44px;
   display:flex; align-items:center; gap:6px; white-space:nowrap; font-family:inherit;
 }
 .pillBtn .badge{background:var(--like); color:#fff; border-radius:999px; padding:1px 7px; font-size:11px; min-width:16px; text-align:center;}
@@ -63,7 +65,7 @@ h1{font-size:19px; margin:0 0 2px; letter-spacing:-.01em;}
 .why{font-size:12.5px; background:var(--chip-bg); border-radius:10px; padding:10px 12px; color:var(--sub); margin-bottom:10px;}
 .why b{color:var(--text);}
 .tags{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:4px;}
-.tag{font-size:11px; background:var(--chip-bg); color:var(--sub); padding:4px 9px; border-radius:999px;}
+.tag{font-size:12px; background:var(--chip-bg); color:var(--sub); padding:4px 9px; border-radius:999px;}
 .link{font-size:12.5px; color:var(--accent); text-decoration:none; font-weight:600;}
 .empty{display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center; color:var(--sub); gap:8px; padding:0 20px; line-height:1.5;}
 .empty .big{font-size:34px;}
@@ -76,7 +78,7 @@ button.round.pass{color:var(--pass);}
 button.round.like{color:var(--like);}
 button.round.applied{width:44px; height:44px; font-size:16px; color:var(--applied);}
 button.round:disabled{opacity:.4; cursor:default;}
-button.round:focus-visible,.pillBtn:focus-visible,.undoBtn:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+button.round:focus-visible,.pillBtn:focus-visible,.undoBtn:focus-visible,.cvBar button:focus-visible,.cvOpen:focus-visible,.cvDl:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
 .note-row{display:flex; gap:8px; margin-bottom:16px;}
 .note-row input,.rejectRow input{
   flex:1; min-width:0; border:1px solid var(--border); background:var(--card); color:var(--text);
@@ -107,13 +109,16 @@ button.round:focus-visible,.pillBtn:focus-visible,.undoBtn:focus-visible{outline
 .cvViewer[hidden]{display:none!important;}
 .cvBar{display:flex; align-items:center; gap:8px; padding:10px 16px; background:var(--card); border-bottom:1px solid var(--border);}
 .cvBar .cvTitle{flex:1; min-width:0; font-size:13px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
-.cvBar button{border:1px solid var(--border); background:var(--chip-bg); color:var(--text); border-radius:10px; padding:8px 12px; font-size:12.5px; font-weight:600; cursor:pointer; white-space:nowrap; font-family:inherit;}
+.cvBar button{min-height:44px; border:1px solid var(--border); background:var(--chip-bg); color:var(--text); border-radius:10px; padding:8px 12px; font-size:12.5px; font-weight:600; cursor:pointer; white-space:nowrap; font-family:inherit;}
 .cvBar button.primary{background:var(--accent); border-color:var(--accent); color:#fff;}
 .cvBar button:disabled{opacity:.5; cursor:default;}
 .cvBody{flex:1; overflow:auto; padding:16px; display:flex; flex-direction:column; align-items:center; gap:12px;}
 .cvBody canvas{width:100%; max-width:820px; height:auto; background:#fff; box-shadow:var(--shadow); border-radius:4px;}
 .cvBody iframe{width:100%; max-width:820px; flex:1; min-height:70vh; border:none; background:#fff; border-radius:4px;}
 .cvMsg{color:#fff; font-size:13px; text-align:center; padding:40px 16px;}
+.cvMsg:empty{display:none;}
+.cvNotice .cvOpen{min-height:44px;}
+.cvNotice{display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; background:var(--card); color:var(--sub); font-size:12.5px; padding:8px 16px; border-bottom:1px solid var(--border);}
 .likedActions{display:flex; gap:8px; align-items:stretch; flex-wrap:wrap;}
 .applyBtn{flex:1; min-width:90px; text-align:center; background:var(--accent); color:#fff; text-decoration:none; font-weight:700; font-size:13px; padding:10px 0; border-radius:10px;}
 .applyBtn.disabled{background:var(--chip-bg); color:var(--sub); cursor:default;}
@@ -211,11 +216,14 @@ button.round:focus-visible,.pillBtn:focus-visible,.undoBtn:focus-visible{outline
       <button class="primary" id="cvSave">Save PDF</button>
       <button id="cvClose">Close</button>
     </div>
+    <div class="cvNotice" id="cvNotice" hidden><span>Showing a simple preview on this device.</span><button class="cvOpen" id="cvFull">Open full PDF</button></div>
+    <div class="cvMsg" id="cvMsg" role="status" aria-live="polite"></div>
     <div class="cvBody" id="cvBody"></div>
   </div>
 </div>
 
 <script>
+const BOARD_VERSION = "0.3.0";  // same as plugin.json; configure stores it on profile/me as boardVersion
 let db = null;
 let profile = {};       // profile/me: {name, brief, searchSchedule, cvEnabled, cvSchedule, ...}
 let pending = [];       // [{id, data}]
@@ -482,55 +490,147 @@ likedList.addEventListener("click", e => {
 
 // ---------- CV viewer (a new tab can't reach the board's stored files, so render here) ----------
 const cvViewer = $("cvViewer"), cvBody = $("cvBody"), cvTitle = $("cvTitle"), cvSaveBtn = $("cvSave");
-let cvCurrent = null, pdfjsPromise = null;
+const cvMsgEl = $("cvMsg"), cvNotice = $("cvNotice");
+// pdf.js is checked against these hashes before it runs; a mismatch falls back to the simple preview.
+const PDFJS = {
+  version: "6.4.299",
+  lib: {url: "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/6.4.299/pdf.min.mjs",
+        sha384: "sha384-QCvhu/UPp22U/TNLVbQNONL82ES2yY717GAiqP9VVu37Y7+m9VPKvadGx9XlFvcp"},
+  worker: {url: "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/6.4.299/pdf.worker.min.mjs",
+           sha384: "sha384-NfW/OTMWezITv4oaALvfH7MFLwzPxEvpySmDpoALa1mtTY8MC200l0ZNFD+SOlrM"},
+};
+const PDF_TIMEOUT_MS = 15000, SLOW_MS = 3000;
+const CV_MISSING = "This CV isn't available any more. It may have been deleted after 7 days. Ask for a new one by liking the job again.";
+let cvCurrent = null, cvOpener = null, cvSeq = 0, cvUrl = "", cvTask = null;
+let pdfjsLib = null, pdfjsLoading = null, pdfjsTries = 0, workerUrl = "";
 
+// Loads and verifies pdf.js once per page. Only a failed load is retried; a CV that fails to render keeps the library.
 function loadPdfjs(){
-  if(pdfjsPromise) return pdfjsPromise;
-  pdfjsPromise = new Promise((resolve, reject) => {
-    const s = document.createElement("script");
-    s.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
-    s.onload = () => { try{ window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"; resolve(window.pdfjsLib); }catch(e){ reject(e); } };
-    s.onerror = () => reject(new Error("pdf.js failed to load"));
-    document.head.appendChild(s);
-  });
-  pdfjsPromise.catch(() => { pdfjsPromise = null; });
-  return pdfjsPromise;
+  if(pdfjsLib) return Promise.resolve(pdfjsLib);
+  if(pdfjsLoading) return pdfjsLoading;
+  const attempt = pdfjsLoading = (async () => {
+    if(!window.pdfjsLib){
+      await new Promise((resolve, reject) => {
+        const s = document.createElement("script");
+        // a failed module load is cached per URL, so a retry needs a URL of its own (the fragment is never sent)
+        s.type = "module"; s.src = PDFJS.lib.url + (pdfjsTries++ ? "#retry" + pdfjsTries : "");
+        s.integrity = PDFJS.lib.sha384; s.crossOrigin = "anonymous";
+        s.onload = resolve; s.onerror = () => { s.remove(); reject(new Error("library blocked or hash mismatch")); };
+        document.head.appendChild(s);
+      });
+    }
+    const lib = window.pdfjsLib;
+    if(!lib) throw new Error("library did not start");
+    if(!workerUrl){
+      const res = await fetch(PDFJS.worker.url, {integrity: PDFJS.worker.sha384, mode: "cors"});
+      if(!res.ok) throw new Error("worker HTTP " + res.status);
+      // Kept for the page's lifetime: pdf.js starts a worker from it for every CV it opens.
+      workerUrl = URL.createObjectURL(new Blob([await res.arrayBuffer()], {type: "text/javascript"}));
+    }
+    lib.GlobalWorkerOptions.workerSrc = workerUrl;
+    return (pdfjsLib = lib);
+  })();
+  attempt.catch(() => {}).finally(() => { if(pdfjsLoading === attempt) pdfjsLoading = null; });
+  return attempt;
 }
-function cvMsg(t){ cvBody.innerHTML = ""; const p = document.createElement("div"); p.className = "cvMsg"; p.textContent = t; cvBody.appendChild(p); }
+function endCvTask(){  // stops the CV's worker and any render still running
+  if(cvTask){ cvTask.destroy().catch(() => {}); cvTask = null; }
+}
+function withTimeout(promise, ms, what){
+  let t;
+  return Promise.race([promise, new Promise((_, reject) => { t = setTimeout(() => reject(new Error(what + " timed out")), ms); })])
+    .finally(() => clearTimeout(t));
+}
+function cvMsg(t){ cvMsgEl.textContent = t; }
 async function fetchBlob(href){
   const res = await fetch(href);
+  const missing = msg => Object.assign(new Error(msg), {missing: true});
+  if(res.status === 404 || res.status === 410) throw missing("HTTP " + res.status);
   if(!res.ok) throw new Error("HTTP " + res.status);
   const blob = await res.blob();
-  if(!blob.size) throw new Error("empty file");
+  if(!blob.size) throw missing("empty file");
   return blob;
 }
-async function openCv(href, name){
-  cvCurrent = null; cvTitle.textContent = name; cvSaveBtn.disabled = true; cvSaveBtn.textContent = "Save PDF";
-  cvViewer.hidden = false; document.body.style.overflow = "hidden"; cvMsg("Loading CV…");
-  let blob;
-  try{ blob = await fetchBlob(href); }
-  catch(e){ cvMsg("Couldn't load this CV (" + (e && e.message || "error") + "). It may have been deleted."); return; }
-  cvCurrent = {blob, name}; cvSaveBtn.disabled = false;
-  try{
-    const pdfjs = await loadPdfjs();
-    const doc = await pdfjs.getDocument({data: new Uint8Array(await blob.arrayBuffer())}).promise;
-    cvBody.innerHTML = "";
-    const scale = Math.min(3, (window.devicePixelRatio || 1) * 1.6);
-    for(let i = 1; i <= doc.numPages; i++){
-      const page = await doc.getPage(i), vp = page.getViewport({scale});
-      const c = document.createElement("canvas");
-      c.width = vp.width; c.height = vp.height; c.setAttribute("role", "img"); c.setAttribute("aria-label", "CV page " + i);
-      cvBody.appendChild(c);
-      await page.render({canvasContext: c.getContext("2d"), viewport: vp}).promise;
-    }
-  }catch(e){
-    cvBody.innerHTML = "";
-    const f = document.createElement("iframe");
-    f.title = "CV preview"; f.src = URL.createObjectURL(new Blob([blob], {type: "application/pdf"}));
-    cvBody.appendChild(f);
+async function renderPages(blob, seq){
+  const pdfjs = await loadPdfjs();
+  const data = new Uint8Array(await blob.arrayBuffer());
+  if(seq !== cvSeq) throw new Error("closed");
+  endCvTask();
+  const task = cvTask = pdfjs.getDocument({data});
+  const doc = await task.promise;
+  const scale = Math.min(3, (window.devicePixelRatio || 1) * 1.6), pages = [];
+  for(let i = 1; i <= doc.numPages; i++){
+    if(seq !== cvSeq) throw new Error("closed");
+    const page = await doc.getPage(i), vp = page.getViewport({scale});
+    const c = document.createElement("canvas");
+    c.width = vp.width; c.height = vp.height; c.setAttribute("role", "img"); c.setAttribute("aria-label", "CV page " + i);
+    await page.render({canvasContext: c.getContext("2d"), viewport: vp}).promise;
+    pages.push(c);
   }
+  return pages;
 }
-function closeCv(){ cvViewer.hidden = true; document.body.style.overflow = ""; cvBody.innerHTML = ""; cvCurrent = null; }
+async function openCv(href, name){
+  const seq = ++cvSeq;
+  cvOpener = document.activeElement;
+  cvCurrent = null; cvTitle.textContent = name; cvSaveBtn.hidden = false; cvSaveBtn.disabled = true; cvSaveBtn.textContent = "Save PDF";
+  endCvTask(); cvBody.innerHTML = ""; cvNotice.hidden = true;
+  cvViewer.hidden = false; setBackgroundInert(true); document.body.style.overflow = "hidden"; $("cvClose").focus();
+  cvMsg("Opening your CV…");  // after unhiding, so the status region is announced
+  const slow = setTimeout(() => { if(seq === cvSeq) cvMsg("Opening your CV… Still working, this can take a few seconds."); }, SLOW_MS);
+  try{
+    let blob;
+    try{ blob = await fetchBlob(href); }
+    catch(e){
+      if(seq !== cvSeq) return;
+      console.warn("cv file:", (e && e.message) || String(e));
+      cvSaveBtn.hidden = true;
+      cvMsg(e && e.missing ? CV_MISSING : "Couldn't open this CV right now. Check your connection and try again.");
+      return;
+    }
+    if(seq !== cvSeq) return;
+    cvCurrent = {blob, name}; cvSaveBtn.disabled = false;
+    try{
+      const pages = await withTimeout(renderPages(blob, seq), PDF_TIMEOUT_MS, "pdf viewer");
+      if(seq !== cvSeq) return;  // a stale task was already ended by closeCv/openCv
+      endCvTask();  // the canvases keep their pixels; the worker can go
+      cvMsg(""); pages.forEach(c => cvBody.appendChild(c));
+      console.info("pdf viewer: verified");
+    }catch(e){
+      if(seq !== cvSeq) return;
+      endCvTask();
+      console.warn("pdf viewer: iframe", (e && e.message) || String(e));
+      cvUrl = URL.createObjectURL(new Blob([blob], {type: "application/pdf"}));
+      cvMsg(""); cvNotice.hidden = false;
+      const f = document.createElement("iframe");
+      f.title = "CV preview"; f.src = cvUrl;
+      cvBody.appendChild(f);
+    }
+  }finally{ clearTimeout(slow); }
+}
+function setBackgroundInert(on){  // with the viewer open, focus can't reach the page behind it (even from the iframe)
+  for(const el of cvViewer.parentElement.children) if(el !== cvViewer) el.inert = on;
+}
+function closeCv(){
+  cvSeq++; endCvTask(); setBackgroundInert(false);
+  cvViewer.hidden = true; document.body.style.overflow = ""; cvBody.innerHTML = ""; cvMsg(""); cvNotice.hidden = true; cvCurrent = null;
+  if(cvUrl){ URL.revokeObjectURL(cvUrl); cvUrl = ""; }
+  if(cvOpener && document.contains(cvOpener)) cvOpener.focus();
+  cvOpener = null;
+}
+$("cvFull").addEventListener("click", () => {
+  if(!cvUrl) return;
+  const w = window.open(cvUrl, "_blank");  // no "noopener" feature: it makes window.open return null even on success
+  if(w) w.opener = null;
+  else cvMsg("This device didn't open a new tab. Use Save PDF instead.");
+});
+cvViewer.addEventListener("keydown", e => {  // keep Tab inside the open viewer
+  if(e.key !== "Tab") return;
+  const f = [...cvViewer.querySelectorAll("button, iframe")].filter(el => !el.hidden && !el.disabled && el.offsetParent !== null);
+  if(!f.length) return;
+  const first = f[0], last = f[f.length - 1];
+  if(e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
+  else if(!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
+});
 
 async function saveBlob(blob, rawName){
   const name = /\.pdf$/i.test(rawName) ? rawName : rawName + ".pdf";
@@ -572,7 +672,8 @@ function renderPrefs(){
   briefSave.disabled = true; briefMsg.textContent = profile.briefUpdatedAt ? "Last saved " + fmtDay(profile.briefUpdatedAt) : "";
   const rows = [["New jobs", profile.searchSchedule || "not scheduled"],
                 ["Tailored CVs", profile.cvEnabled ? (profile.cvSchedule || "on") : "off"],
-                ["Time zone", profile.timezone || "—"]];
+                ["Time zone", profile.timezone || "—"],
+                ["Board version", BOARD_VERSION]];
   $("scheduleRows").innerHTML = rows.map(([k, v]) => '<div class="kv"><span>' + esc(k) + '</span><b>' + esc(v) + '</b></div>').join("");
 }
 briefInput.addEventListener("input", () => { briefSave.disabled = false; briefMsg.textContent = ""; });
