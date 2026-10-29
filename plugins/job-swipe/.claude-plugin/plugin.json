@@ -5,6 +5,7 @@
   "author": { "name": "Lorenzo Cocchia" },
   "repository": "https://github.com/cocchialorenzo9/job-swipe",
   "homepage": "https://github.com/cocchialorenzo9/job-swipe",
+  "privacyPolicyUrl": "https://github.com/cocchialorenzo9/job-swipe#your-data-and-privacy",
   "license": "MIT",
   "keywords": ["jobs", "job search", "cv", "resume", "career"]
 }
