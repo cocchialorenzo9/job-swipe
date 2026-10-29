@@ -7,7 +7,7 @@ Your own job feed, run by Claude: it finds jobs that fit you, you swipe on your 
 a CV written for it from your real experience. No coding, no terminal.
 
 - Twice a week (or as often as you like), Claude looks for jobs that match what you want and puts them on your **Job Swipe board**.
-- You swipe on your phone: **right** = interested, **left** = not for me, **✓** = already applied. Add a short "why" to a swipe, and the next search uses it.
+- You swipe on your phone: **right** = interested, **left** = not for me, or tap **Already applied** on the card. Add a short "why" to a swipe, and the next search uses it.
 - Every job you swipe right on gets a **one-page CV made for that job** (optional). It's built only from facts in your real CV and is easy for application systems to read. It shows up under ♥ the next time the CV task runs: by default weekday evenings, so a job liked on Saturday gets its CV on Monday.
 
 You don't need to code. You need a paid **Claude plan (Pro or higher)** and the **Claude desktop app** for the first setup. After that, it all runs in the cloud, even when your laptop is closed, and you can swipe from the Claude phone app.

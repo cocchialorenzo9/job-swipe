@@ -4,7 +4,7 @@
 <style>
 :root{
   --bg:#f6f5f3; --card:#ffffff; --text:#1c1b1a; --sub:#6b6864; --border:#e4e1dc;
-  --accent:#c65d3b; --like:#2f9e60; --pass:#c14848; --applied:#3b6fc6;
+  --accent:#c65d3b; --like:#2f9e60; --pass:#c14848;
   --chip-bg:#f0ede8; --shadow: 0 10px 30px -12px rgba(0,0,0,.25);
   --cv-bg:#eaf4ee; --cv-text:#23734a;
 }
@@ -66,7 +66,10 @@ h1{font-size:19px; margin:0 0 2px; letter-spacing:-.01em;}
 .why b{color:var(--text);}
 .tags{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:4px;}
 .tag{font-size:12px; background:var(--chip-bg); color:var(--sub); padding:4px 9px; border-radius:999px;}
-.link{font-size:12.5px; color:var(--accent); text-decoration:none; font-weight:600;}
+.cardFoot{display:flex; justify-content:space-between; align-items:center; gap:10px; margin-top:10px;}
+.appliedBtn{min-height:44px; border:1px solid var(--border); background:var(--chip-bg); color:var(--text); border-radius:10px; padding:0 14px; font-size:13px; font-weight:600; cursor:pointer; font-family:inherit; white-space:nowrap;}
+.postingBtn{min-height:44px; display:inline-flex; align-items:center; background:var(--accent); color:#fff; border-radius:10px; padding:0 14px; font-size:13px; font-weight:700; text-decoration:none; white-space:nowrap;}
+.appliedBtn:focus-visible,.postingBtn:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
 .empty{display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; text-align:center; color:var(--sub); gap:8px; padding:0 20px; line-height:1.5;}
 .empty .big{font-size:34px;}
 .controls{display:flex; justify-content:center; align-items:center; gap:16px; margin-bottom:10px;}
@@ -76,7 +79,6 @@ button.round{
 }
 button.round.pass{color:var(--pass);}
 button.round.like{color:var(--like);}
-button.round.applied{width:44px; height:44px; font-size:16px; color:var(--applied);}
 button.round:disabled{opacity:.4; cursor:default;}
 button.round:focus-visible,.pillBtn:focus-visible,.undoBtn:focus-visible,.cvBar button:focus-visible,.cvOpen:focus-visible,.cvDl:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
 .note-row{display:flex; flex-direction:column; gap:4px; margin-bottom:16px;}
@@ -185,7 +187,6 @@ button.round:focus-visible,.pillBtn:focus-visible,.undoBtn:focus-visible,.cvBar 
     <div class="stage" id="stage"></div>
     <div class="controls" id="controls" hidden>
       <button class="round pass" id="btnPass" title="Not interested" aria-label="Not interested">✕</button>
-      <button class="round applied" id="btnApplied" title="Already applied" aria-label="Already applied">✓</button>
       <button class="round like" id="btnLike" title="Interested" aria-label="Interested">♥</button>
     </div>
     <div class="whyStrip" id="whyStrip" hidden>
@@ -298,7 +299,10 @@ function renderCard(job){
       '<div class="blurb">' + esc(d.blurb || "") + '</div>' +
       (d.matchReason ? '<div class="why"><b>Why it matched:</b> ' + esc(d.matchReason) + '</div>' : "") +
       '<div class="tags">' + tags + '</div>' +
-      (url ? '<a class="link" href="' + esc(url) + '" target="_blank" rel="noopener">View full posting ↗</a>' : "") +
+      '<div class="cardFoot">' +
+        '<button class="appliedBtn" id="btnApplied" title="You applied to this job elsewhere">Already applied</button>' +
+        (url ? '<a class="postingBtn" href="' + esc(url) + '" target="_blank" rel="noopener">View full posting ↗</a>' : "") +
+      '</div>' +
     '</div>';
   controls.hidden = false; noteRow.hidden = whyAsking();
   noteInput.value = "";
@@ -311,7 +315,7 @@ function attachDrag(){
   const cardEl = $("cardEl");
   if(!cardEl) return;
   let startX = 0, dx = 0, dragging = false;
-  const down = e => { if(e.target.closest("a")) return; dragging = true; startX = e.clientX; dx = 0; cardEl.style.transition = "none"; };
+  const down = e => { if(e.target.closest("a,button")) return; dragging = true; startX = e.clientX; dx = 0; cardEl.style.transition = "none"; };
   const move = e => {
     if(!dragging) return;
     dx = e.clientX - startX;
@@ -389,7 +393,7 @@ async function undo(){
 
 $("btnLike").addEventListener("click", () => doSwipe("liked"));
 $("btnPass").addEventListener("click", () => doSwipe("disliked"));
-$("btnApplied").addEventListener("click", () => doSwipe("applied"));
+stage.addEventListener("click", e => { if(e.target.closest("#btnApplied")) doSwipe("applied"); });  // the button is redrawn with each card
 $("btnUndo").addEventListener("click", undo);
 // ---------- "Why?" after a swipe ----------
 const SWIPE_LABEL = {liked: "♥ Interested", disliked: "✕ Passed", applied: "✓ Applied"};

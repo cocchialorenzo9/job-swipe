@@ -100,7 +100,7 @@ Ask: "Shall I build it like this?" Build nothing until they say yes. Changes →
 ## 5. Wrap up (4–6 short lines)
 
 - The board is in their Claude artifacts as "Job Swipe": pin it, and use the Claude phone app to swipe.
-- Right = interested, left = not, ✓ = already applied; a short "why" note makes the next search smarter.
+- Right = interested, left = not, "Already applied" on the card for jobs they applied to elsewhere; a short "why" note makes the next search smarter.
 - ⚙ on the board shows their search brief, and they can edit it there any time.
 - Liked jobs get a CV under ♥ ("Open CV") the next time the CV task runs (tell them when, from their CV
   schedule, e.g. "weekday evenings, so a job liked on Saturday gets its CV on Monday"); each CV is deleted

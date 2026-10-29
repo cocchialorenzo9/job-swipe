@@ -390,6 +390,25 @@ class BoardViewerTest(unittest.TestCase):
         page.wait_for_function("window.__fakeStore.jobs.l1.note === 'loved the team, hybrid ok'")
         self.assertIn("Your note: loved the team, hybrid ok", page.locator(".likedCard", has_text="loved the team").inner_text())
 
+    def test_already_applied_is_a_labelled_card_button(self):
+        page, _ = self.open_board()
+        self.assertEqual(page.locator("#controls button").count(), 2)  # only pass and like stay round
+        foot = page.locator("#cardEl .cardFoot")
+        applied, posting = foot.locator("#btnApplied"), foot.locator("a.postingBtn")
+        self.assertEqual(applied.inner_text(), "Already applied")
+        self.assertIn("View full posting", posting.inner_text())
+        a, b = applied.bounding_box(), posting.bounding_box()
+        self.assertLess(a["x"], b["x"])  # applied on the left, posting on the right
+        self.assertGreaterEqual(min(a["height"], b["height"]), 44)
+        bg = page.evaluate("getComputedStyle(document.querySelector('a.postingBtn')).backgroundColor")
+        accent = page.evaluate("""(() => { const d = document.createElement('div'); d.style.color = 'var(--accent)';
+            document.body.appendChild(d); const c = getComputedStyle(d).color; d.remove(); return c; })()""")
+        self.assertEqual(bg, accent)
+        applied.click()
+        page.wait_for_function("window.__fakeStore.jobs.p1.status === 'applied'")
+        self.assertIn("Applied", page.inner_text("#whyStrip"))
+        page.screenshot(path=str(OUT / "card-footer.png"))
+
     def test_focus_moves_into_viewer_and_back(self):
         page, _ = self.open_board()
         self.open_liked(page)
