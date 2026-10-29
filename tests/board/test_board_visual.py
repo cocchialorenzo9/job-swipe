@@ -449,6 +449,25 @@ class BoardViewerTest(unittest.TestCase):
                 self.assertTrue(xs[-1]["primary"], xs)  # last = rightmost
                 self.assertEqual(max(xs, key=lambda e: e["x"]), xs[-1])
 
+    def test_note_box_has_a_pencil_or_an_empty_prompt(self):
+        page, _ = self.open_board()
+        page.click("#btnShowLiked")
+        page.click("#tabPassed")
+        with_note = page.locator(".likedCard", has_text="Far Away Ltd")
+        pencil = with_note.locator(".noteBox [data-action=note-toggle]")
+        self.assertEqual(pencil.get_attribute("aria-label"), "Edit note")
+        box, pen = with_note.locator(".noteBox").bounding_box(), pencil.bounding_box()
+        self.assertAlmostEqual(pen["x"] + pen["width"], box["x"] + box["width"], delta=6)  # top right of the note
+        self.assertLess(pen["y"] - box["y"], 8)
+        self.assertGreaterEqual(min(pen["width"], pen["height"]), 44)
+        page.click("#tabApplied")
+        empty = page.locator(".likedCard", has_text="Applied Inc").locator(".noteBox.noteEmpty")
+        self.assertEqual(empty.inner_text(), "No note yet. Tap to add one.")
+        self.assertLess(empty.bounding_box()["height"], 80)  # one line, not stretched by another rule
+        empty.click()
+        self.assertTrue(page.locator(".likedCard", has_text="Applied Inc").locator("[data-note-edit]").is_visible())
+        self.assertEqual(page.locator("#likedList .linkBtn").count(), 0)  # no separate Edit/Add link any more
+
     def test_focus_moves_into_viewer_and_back(self):
         page, _ = self.open_board()
         self.open_liked(page)

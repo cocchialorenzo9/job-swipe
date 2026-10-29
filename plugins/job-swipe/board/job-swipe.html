@@ -93,6 +93,12 @@ button.round:focus-visible,.pillBtn:focus-visible,.undoBtn:focus-visible,.cvBar 
 .linkBtn{min-height:44px; border:none; background:none; color:var(--accent); font-size:12.5px; font-weight:600; cursor:pointer; padding:0; font-family:inherit;}
 .linkBtn.quiet{color:var(--sub); font-weight:500;}
 .linkBtn:focus-visible,.whyRow button:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+.noteBox{display:flex; align-items:flex-start; gap:4px; background:var(--chip-bg); border-radius:10px; padding:0 0 0 12px; margin-bottom:10px; font-size:12.5px; color:var(--sub); line-height:1.45;}
+.noteBox .noteText{flex:1; min-width:0; padding:12px 0; overflow-wrap:anywhere;}
+.noteBox .noteText b{color:var(--text); font-weight:600;}
+.noteEdit{flex:none; width:44px; height:44px; border:none; background:none; color:var(--sub); font-size:17px; cursor:pointer; border-radius:10px; font-family:inherit;}
+.noteBox.noteEmpty{width:100%; min-height:44px; padding:12px; border:1px dashed var(--border); background:transparent; text-align:left; cursor:pointer; font-family:inherit;}
+.noteEdit:focus-visible,.noteBox.noteEmpty:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
 .noteEditRow{display:none; gap:8px; margin:-4px 0 10px;}
 .noteEditRow.open{display:flex;}
 .noteEditRow button{border:none; background:var(--chip-bg); color:var(--text); border-radius:10px; padding:0 14px; font-size:12.5px; cursor:pointer; font-weight:600; white-space:nowrap; font-family:inherit;}
@@ -149,7 +155,6 @@ button.round:focus-visible,.pillBtn:focus-visible,.undoBtn:focus-visible,.cvBar 
 .segTabs button{flex:1; border:none; background:transparent; color:var(--sub); border-radius:999px; padding:8px 10px; font-size:12.5px; font-weight:600; cursor:pointer; font-family:inherit;}
 .segTabs button[aria-selected="true"]{background:var(--card); color:var(--text); box-shadow:0 1px 4px rgba(0,0,0,.12);}
 .segTabs button:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
-.passedNote{font-size:12.5px; background:var(--chip-bg); border-radius:10px; padding:9px 12px; color:var(--sub); margin-bottom:10px; line-height:1.45;}
 .restoreBtn{border:1px solid var(--like); background:transparent; color:var(--like); border-radius:10px; padding:10px 14px; font-size:12.5px; font-weight:600; cursor:pointer; white-space:nowrap; font-family:inherit;}
 .restoreBtn:disabled{opacity:.5; cursor:default;}
 .panelEmpty{display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; color:var(--sub); gap:8px; padding:60px 20px; font-size:13px;}
@@ -483,8 +488,10 @@ function renderCvRow(d){
 }
 
 function noteBlock(d, id){  // the person's own "why", shown and editable on saved jobs
-  return (d.note ? '<div class="passedNote"><b>Your note:</b> ' + esc(d.note) + '</div>' : '') +
-    '<button class="linkBtn" data-action="note-toggle" data-id="' + id + '">' + (d.note ? "Edit note" : "Add a note") + '</button>' +
+  return (d.note
+      ? '<div class="noteBox"><span class="noteText"><b>Your note:</b> ' + esc(d.note) + '</span>' +
+          '<button class="noteEdit" data-action="note-toggle" data-id="' + id + '" aria-label="Edit note" title="Edit note">✎</button></div>'
+      : '<button class="noteBox noteEmpty" data-action="note-toggle" data-id="' + id + '">No note yet. Tap to add one.</button>') +
     '<div class="noteEditRow" data-note-row="' + id + '">' +
       '<input type="text" data-note-edit="' + id + '" value="' + esc(d.note || "") + '" aria-label="Your note" placeholder="Why? (helps the next search)" maxlength="140" />' +
       '<button data-action="note-save" data-id="' + id + '">Save</button>' +
