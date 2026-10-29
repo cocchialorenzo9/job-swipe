@@ -85,6 +85,8 @@ DATA = {
         "a1": {"status": "applied", "company": "Applied Inc", "title": "Group Product Manager", "location": "Berlin",
                "swipedAt": "2026-10-18T08:00:00Z", "appliedAt": "2026-10-23T09:00:00Z", "url": "https://example.com/jobs/6",
                "cvAssetId": "cv1", "cvFileName": "Alex_Example_CV_Applied_Inc.pdf", "cvCreatedAt": "2026-10-22T07:00:00Z"},
+        "d1": {"status": "disliked", "company": "Far Away Ltd", "title": "Product Manager", "location": "Sydney",
+               "swipedAt": "2026-10-17T08:00:00Z", "url": "https://example.com/jobs/7", "note": "too far"},
         "l3": {"status": "liked", "company": "Paused AG", "title": "Product Lead", "location": "Munich",
                "swipedAt": "2026-10-19T08:00:00Z", "url": "https://example.com/jobs/4", "cvStatus": "removed",
                "cvAssetId": "", "cvCreatedAt": "2026-10-18T07:00:00Z"},
@@ -434,6 +436,18 @@ class BoardViewerTest(unittest.TestCase):
         page.click("#btnShowLiked")
         page.click("#tabApplied")
         page.wait_for_selector(".likedCard:has-text('Senior Product Manager')")
+
+    def test_primary_action_is_on_the_right_in_every_tab(self):
+        page, _ = self.open_board()
+        page.click("#btnShowLiked")
+        for tab in ("#tabLiked", "#tabApplied", "#tabPassed"):
+            with self.subTest(tab=tab):
+                page.click(tab)
+                page.wait_for_selector("#likedList .likedCard .likedActions")
+                xs = page.evaluate("""() => [...document.querySelector('#likedList .likedCard .likedActions').children]
+                    .map(e => ({primary: e.classList.contains('applyBtn'), x: e.getBoundingClientRect().x}))""")
+                self.assertTrue(xs[-1]["primary"], xs)  # last = rightmost
+                self.assertEqual(max(xs, key=lambda e: e["x"]), xs[-1])
 
     def test_focus_moves_into_viewer_and_back(self):
         page, _ = self.open_board()

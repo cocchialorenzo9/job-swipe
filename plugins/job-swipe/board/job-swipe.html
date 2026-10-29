@@ -499,10 +499,10 @@ function renderLikedCard(job){
       '<div class="meta">' + esc(d.location || "") + (d.remote ? " · Remote" : "") + '</div>' +
       renderCvRow(d) +
       noteBlock(d, id) +
-      '<div class="likedActions">' +
-        (url ? '<a class="applyBtn" href="' + esc(url) + '" target="_blank" rel="noopener">Apply ↗</a>' : '<span class="applyBtn disabled">No link saved</span>') +
+      '<div class="likedActions">' +  // secondary actions left, the primary one right
         '<button class="markAppliedBtn" data-action="applied" data-id="' + id + '">Mark applied</button>' +
         '<button class="rejectBtn" data-action="reject-toggle" data-id="' + id + '">Pass</button>' +
+        (url ? '<a class="applyBtn" href="' + esc(url) + '" target="_blank" rel="noopener">Apply ↗</a>' : '<span class="applyBtn disabled">No link saved</span>') +
       '</div>' +
       '<div class="rejectRow" data-row-id="' + id + '">' +
         '<input type="text" data-note-id="' + id + '" placeholder="Optional: why?" maxlength="140" />' +
@@ -520,8 +520,8 @@ function renderAppliedCard(job){
       (cvHref(d) || d.cvStatus ? renderCvRow(d) : "") +  // no "CV arrives" promise: applied jobs don't get new CVs
       noteBlock(d, id) +
       '<div class="likedActions">' +
-        (url ? '<a class="applyBtn" href="' + esc(url) + '" target="_blank" rel="noopener">View posting ↗</a>' : '<span class="applyBtn disabled">No link saved</span>') +
         '<button class="restoreBtn" data-action="unapply" data-id="' + id + '">♥ Move to interested</button>' +
+        (url ? '<a class="applyBtn" href="' + esc(url) + '" target="_blank" rel="noopener">View posting ↗</a>' : '<span class="applyBtn disabled">No link saved</span>') +
       '</div>' +
     '</div>';
 }
@@ -534,8 +534,8 @@ function renderPassedCard(job){
       '<div class="meta">' + esc(d.location || "") + (d.remote ? " · Remote" : "") + (d.swipedAt ? " · passed " + esc(fmtDay(d.swipedAt)) : "") + '</div>' +
       noteBlock(d, id) +
       '<div class="likedActions">' +
-        (url ? '<a class="applyBtn" href="' + esc(url) + '" target="_blank" rel="noopener">View posting ↗</a>' : '<span class="applyBtn disabled">No link saved</span>') +
         '<button class="restoreBtn" data-action="restore" data-id="' + id + '">♥ Move to interested</button>' +
+        (url ? '<a class="applyBtn" href="' + esc(url) + '" target="_blank" rel="noopener">View posting ↗</a>' : '<span class="applyBtn disabled">No link saved</span>') +
       '</div>' +
     '</div>';
 }
