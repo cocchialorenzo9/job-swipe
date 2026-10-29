@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.1
+
+- **Icon**: the plugin now ships a listing icon (`.claude-plugin/icon.png`, 1024 × 1024 PNG).
+
 ## 0.3.0
 
 Open source and safer to share.
