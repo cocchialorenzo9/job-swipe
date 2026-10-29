@@ -1,6 +1,7 @@
 # How to run the interview ("grilling")
 
 Adapted for Job Swipe from Matt Pocock's `grilling` skill (MIT): https://github.com/mattpocock/skills
+(license text: https://github.com/cocchialorenzo9/job-swipe/blob/main/THIRD_PARTY_NOTICES.md)
 
 Interview the person until you both have the same picture of what will be built: their CV facts, the jobs to
 look for, the rhythm, and how the CV should look. Treat it as a **design tree** (`design-tree.md`): every decision

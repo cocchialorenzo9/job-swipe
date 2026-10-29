@@ -2,3 +2,9 @@
 __pycache__/
 cv_out/
 *.pyc
+
+# gstack / agent working artifacts (design docs, reviews, scratch)
+.gstack/
+.context/
+tests/board/out/
+tests/board/.cache/

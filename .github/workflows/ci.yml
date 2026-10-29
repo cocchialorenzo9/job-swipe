@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    name: CI
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0 # the version-bump check compares with the base branch
+
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.11"
+
+      - name: Install LaTeX and poppler (the same packages build.py installs)
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q texlive-latex-base texlive-latex-recommended texlive-fonts-recommended \
+            texlive-latex-extra lmodern poppler-utils
+
+      - name: Install Python packages
+        run: pip install "jinja2>=3,<4" "pyyaml>=6,<7" -r tests/board/requirements.txt
+
+      - name: Pick the version-bump base
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE_REF: ${{ github.base_ref }}
+          BEFORE: ${{ github.event.before }}
+        run: |
+          if [ "$EVENT" = "pull_request" ]; then
+            echo "VERSION_BASE=origin/$BASE_REF" >> "$GITHUB_ENV"
+          elif [ -n "$BEFORE" ] && [ "$BEFORE" != "0000000000000000000000000000000000000000" ]; then
+            echo "VERSION_BASE=$BEFORE" >> "$GITHUB_ENV"
+          fi
+
+      - name: Unit, builder and repo tests
+        env:
+          REQUIRE_LATEX: "1"
+          NETWORK: "1"
+        run: python -m unittest discover tests -v
+
+      - name: Build the example CV
+        run: |
+          python plugins/job-swipe/skills/tailor-cvs/cv/build.py \
+            plugins/job-swipe/skills/tailor-cvs/cv/examples/master_cv.example.yaml \
+            plugins/job-swipe/skills/tailor-cvs/cv/examples/job_spec.example.yaml cv_out | tee report.txt
+          grep -q "^Pages: 1 " report.txt
+          grep -q "^ATS text check: OK$" report.txt
+
+      - name: Install browsers
+        run: python -m playwright install --with-deps chromium webkit
+
+      - name: Board CV viewer in real browsers
+        env:
+          REQUIRE_BROWSER: "1"
+        run: python -m unittest tests.board.test_board_visual -v
+
+      - name: Keep the screenshots
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: board-screenshots
+          path: tests/board/out/
+          if-no-files-found: ignore

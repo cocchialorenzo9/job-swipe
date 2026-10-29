@@ -54,7 +54,7 @@ def _import_deps():
 
 
 def _pip(python, *extra):
-    return subprocess.run([python, "-m", "pip", "install", "-q", *extra, "jinja2", "pyyaml"],
+    return subprocess.run([python, "-m", "pip", "install", "-q", *extra, "jinja2>=3,<4", "pyyaml>=6,<7"],
                           capture_output=True, text=True)
 
 
@@ -141,6 +141,45 @@ def tex(s):
 
 def plain(s):
     return " ".join(str(s or "").split())
+
+
+_PDFSTR = {"\\": r"\textbackslash{}", "{": r"\{", "}": r"\}", "%": r"\%", "#": r"\#", "&": r"\&",
+           "~": r"\textasciitilde{}", "^": r"\textasciicircum{}", "$": r"\$", "_": r"\_"}
+
+
+def pdfstr(s):
+    """Plain text -> hyperref PDF metadata (title, author, subject). Only the characters TeX would act on."""
+    return "".join(_PDFSTR.get(ch, ch) for ch in plain(s))
+
+
+EMAIL = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
+WEB = re.compile(r"(https?://)?([A-Za-z0-9-]+\.)+[A-Za-z]{2,}(/[A-Za-z0-9._~:/?#@!&'()*+,;=%-]*)?")
+
+
+def classify_contact(c):
+    """("email" | "url", link target) for a clean address, else ("text", None): shown as text, never as a link."""
+    c = plain(c)
+    if EMAIL.fullmatch(c):
+        return "email", "mailto:" + c
+    if WEB.fullmatch(c):
+        return "url", c if re.match(r"https?://", c) else "https://" + c
+    return "text", None
+
+
+def contact_items(header):
+    """LaTeX for each contact entry, plus the entries that looked like an address but are shown without a link."""
+    items, unlinked = [], []
+    for c in header.get("contact") or []:
+        c = plain(c)
+        kind, target = classify_contact(c)
+        if kind == "text":
+            items.append(tex(c))
+            if "@" in c or ("." in c and " " not in c):  # meant as an address, so say why it has no link
+                unlinked.append(c)
+            continue
+        shown = c if kind == "email" else re.sub(r"^https?://", "", c)
+        items.append(r"\href{%s}{%s}" % (target.replace("%", r"\%").replace("#", r"\#"), tex(shown)))
+    return items, unlinked
 
 
 def load(p):
@@ -238,23 +277,14 @@ def assemble(master, spec, drop):
         extras[s["id"]] = dict(title=tex(s["title"]), bulleted=bool(s.get("bulleted")),
                                lines=[tex(i) for i in s.get("items", [])])
     h = master["header"]
-    contact = []
-    for c in h.get("contact") or []:
-        c = plain(c)
-        if re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", c):
-            contact.append(r"\href{mailto:%s}{%s}" % (c, tex(c)))
-        elif re.match(r"(https?://)?([\w-]+\.)+[a-z]{2,}(/\S*)?$", c, re.I) and " " not in c:
-            url = c if c.startswith("http") else "https://" + c
-            contact.append(r"\href{%s}{%s}" % (url.replace("%", r"\%").replace("#", r"\#"), tex(re.sub(r"^https?://", "", c))))
-        else:
-            contact.append(tex(c))
+    contact, unlinked = contact_items(h)
     headline = spec.get("headline") or track_cfg(master, spec).get("headline") or h.get("headline") or ""
     summary = spec.get("summary") or track_cfg(master, spec).get("summary") or master.get("summary")
     if "summary" in drop:
         summary = None
     style = get_style(master)
-    return dict(style=style, sections=style["sections"], name=tex(h["name"]), headline=tex(headline), headline_plain=plain(headline),
-                contact=contact, summary=tex(summary) if summary else None, roles=roles,
+    return dict(style=style, sections=style["sections"], name=tex(h["name"]), headline=tex(headline),
+                meta_name=pdfstr(h["name"]), meta_headline=pdfstr(headline), contact=contact, unlinked=unlinked, summary=tex(summary) if summary else None, roles=roles,
                 education=edu, skill_rows=skill_rows(master, spec), extras=extras)
 
 
@@ -351,6 +381,7 @@ def main():
               f"Spacing preset: {i + 1}/{len(PRESETS)}",
               f"Dropped to fit: {dropped or 'nothing'}",
               f"ATS text check: {'OK' if not problems else problems}"]
+    report += [f"Contact shown without link: {c}" for c in ctx["unlinked"]]
     if kws := spec.get("keywords"):
         report.append(f"Keywords present ({len(hit)}/{len(kws)}): {hit}")
         report.append(f"Keywords missing: {miss}")
