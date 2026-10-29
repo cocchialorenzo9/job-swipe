@@ -7,8 +7,11 @@ Open source and safer to share.
 - **License**: MIT. The interview adapts Matt Pocock's MIT-licensed `grilling` skill (see THIRD_PARTY_NOTICES.md).
 - **Web pages are treated as untrusted.** The search and the CV task ignore instructions hidden in job pages, skip
   postings that try to make them act, and tell you in the notification ("Skipped 1 posting that looked
-  suspicious…"). Your name, contact details and CV text never go into searches, links or forms, and the tasks make
-  no other network requests from the command line.
+  suspicious…"). Claude is told never to put your name, contact details or CV text into searches, links or forms,
+  and not to make network requests from the command line apart from the CV builder's installs. These are
+  instructions, not a sandbox: they lower the risk, they can't rule it out.
+- **Your data**: the README explains what Job Swipe keeps, who sees it, for how long, and how to remove it. Turning
+  CVs off or pausing now deletes the CVs still on your board (before, they stayed on the board indefinitely).
 - **CV builder**: headlines with `%` or `#` (for example "Growth PM | 100% remote") no longer break the build.
   Contact entries that aren't a clean email or web address are shown as plain text and listed in the build report.
   The builder's Python packages are pinned to known major versions.

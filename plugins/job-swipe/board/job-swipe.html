@@ -397,6 +397,7 @@ function renderCvRow(d){
       (d.cvNote ? '<div class="cvNote">' + esc(d.cvNote) + '</div>' : '');
   }
   if(d.cvStatus === "expired") return '<div class="cvRow"><span>CV deleted after 7 days' + (d.cvCreatedAt ? ' (made ' + esc(fmtDay(d.cvCreatedAt)) + ')' : '') + '</span></div>';
+  if(d.cvStatus === "removed") return '<div class="cvRow"><span>CV deleted when CVs were turned off</span></div>';
   if(d.cvStatus === "skipped") return '<div class="cvRow"><span>No CV made' + (d.cvNote ? ': ' + esc(d.cvNote) : '') + '</span></div>';
   if(!profile.cvEnabled) return '';
   return '<div class="cvRow"><span>Tailored CV arrives ' + esc(profile.cvSchedule || "at the next CV run") + '</span></div>';

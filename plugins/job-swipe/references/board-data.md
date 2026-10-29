@@ -6,7 +6,8 @@ same operations as a separate ArtifactData tool; load whichever exists with Tool
 (the CV PDFs) use the Artifact tool's `upload_asset` / `delete_asset` actions; there is no other tool for them.
 
 **Never call Artifact `delete` on the board.** It deletes the whole board for good. Removing one stored file is
-`delete_asset`; nothing else.
+`delete_asset`; nothing else. The one exception is configure's "Delete everything", when the person explicitly
+asked for it.
 
 **Versions.** Every `update` / `set` on a doc you read passes the `version` you read as `if_version`. When a write
 is refused because the doc changed (someone swiped, added a note or edited their brief meanwhile):

@@ -79,6 +79,9 @@ DATA = {
         "l2": {"status": "liked", "company": "Gone GmbH", "title": "Product Owner", "location": "Hamburg",
                "swipedAt": "2026-10-20T08:00:00Z", "url": "https://example.com/jobs/3", "cvAssetId": "gone",
                "cvCreatedAt": "2026-10-01T07:00:00Z"},
+        "l3": {"status": "liked", "company": "Paused AG", "title": "Product Lead", "location": "Munich",
+               "swipedAt": "2026-10-19T08:00:00Z", "url": "https://example.com/jobs/4", "cvStatus": "removed",
+               "cvAssetId": "", "cvCreatedAt": "2026-10-18T07:00:00Z"},
     },
 }
 
@@ -312,6 +315,13 @@ class BoardViewerTest(unittest.TestCase):
         self.assertTrue(page.evaluate("document.getElementById('likedPanel').inert"))
         page.keyboard.press("Escape")
         self.assertFalse(page.evaluate("document.getElementById('likedPanel').inert"))
+
+    def test_cv_removed_by_cvs_off_says_so(self):
+        page, _ = self.open_board()
+        page.click("#btnShowLiked")
+        card = page.locator(".likedCard", has_text="Paused AG")
+        self.assertEqual(card.locator(".cvRow").inner_text(), "CV deleted when CVs were turned off")
+        self.assertEqual(card.locator("[data-action=open-cv]").count(), 0)
 
     def test_focus_moves_into_viewer_and_back(self):
         page, _ = self.open_board()

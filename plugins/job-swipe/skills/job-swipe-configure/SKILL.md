@@ -103,7 +103,8 @@ Ask: "Shall I build it like this?" Build nothing until they say yes. Changes →
 - Right = interested, left = not, ✓ = already applied; a short "why" note makes the next search smarter.
 - ⚙ on the board shows their search brief, and they can edit it there any time.
 - Liked jobs get a CV under ♥ ("Open CV") the next time the CV task runs (tell them when, from their CV
-  schedule, e.g. "weekday evenings, so a job liked on Saturday gets its CV on Monday"); CVs are deleted after 7 days.
+  schedule, e.g. "weekday evenings, so a job liked on Saturday gets its CV on Monday"); each CV is deleted
+  7 days after it's made, and turning CVs off or pausing deletes them all.
 - Changed your mind? ♥ → "Passed" lists every job you swiped left on, with "Move to interested".
 - Anything else: "configure Job Swipe" again.
 
@@ -120,8 +121,18 @@ Ask: "Shall I build it like this?" Build nothing until they say yes. Changes →
      / `maxNewPerRun` / `pickiness`.
    - CV details or look → edit the YAML from profile/cv, rebuild a sample (E-proto) if the look changed,
      `set` profile/cv.
-   - CVs on → build CV details (branches B, E, F) if missing, create the CV task, `cvEnabled: true`.
-     CVs off → `update_trigger` enabled=false, `cvEnabled: false`.
-   - Pause/stop → disable both tasks. Delete the board only if they explicitly ask, after saying it can't be
-     undone.
+   - CVs on → build CV details (branches B, E, F) if missing; enable the CV task (`update_trigger` enabled=true
+     with `cvTaskId`) or create it if there is none; `cvEnabled: true`.
+     CVs off → remove stored CVs (below), `update_trigger` enabled=false, `cvEnabled: false`. Then ask once
+     whether to delete their CV details too; if yes, `set` profile/cv to `{deletedAt: <ISO now>}`.
+   - Pause/stop → remove stored CVs (below), then disable both tasks.
+   - Delete everything → only if they explicitly ask, after saying it can't be undone: remove stored CVs, delete
+     both scheduled tasks (or, without a tool for that, tell them to delete the two "Job Swipe" tasks in
+     Scheduled tasks), then delete the board with Artifact `delete`. This is the only place a board is deleted.
+
+   **Remove stored CVs** (the scheduled CV task stops running once it's off, so nothing else would delete them):
+   `read_db` `query` collection `jobs` where `cvAssetId != ""`, and where `cvDeleteAssetId != ""`. For each doc,
+   follow `../tailor-cvs/SKILL.md` step 1 (unlink first, then `delete_asset`, never `delete`), but with
+   `cvStatus: "removed"` instead of `"expired"`. A delete that still fails after 3 tries: tell them which jobs'
+   CVs are still on the board.
 5. Confirm in one line what changed.

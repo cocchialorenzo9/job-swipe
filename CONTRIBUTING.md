@@ -31,7 +31,8 @@ with auto-approve on. Review it like code:
 - Does it keep the untrusted-content rules in `references/board-data.md` intact?
 - Could it make the agent ask a question on a schedule (nobody is there to answer), loop, or use much more of the
   person's Claude usage?
-- Could it lose data? Board writes go through `if_version`; `Artifact delete` is never used on a board.
+- Could it lose data? Board writes go through `if_version`; `Artifact delete` is used on a board only by configure's "Delete
+  everything", when the person explicitly asked.
 
 ## Checks to run
 
