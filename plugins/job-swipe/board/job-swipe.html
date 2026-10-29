@@ -209,6 +209,7 @@ button.round:focus-visible,.pillBtn:focus-visible,.undoBtn:focus-visible,.cvBar 
     </div>
     <div class="segTabs" role="tablist" aria-label="Saved jobs">
       <button role="tab" id="tabLiked" aria-selected="true">♥ Interested</button>
+      <button role="tab" id="tabApplied" aria-selected="false">✓ Applied</button>
       <button role="tab" id="tabPassed" aria-selected="false">✕ Passed</button>
     </div>
     <div id="likedList"></div>
@@ -300,7 +301,7 @@ function renderCard(job){
       (d.matchReason ? '<div class="why"><b>Why it matched:</b> ' + esc(d.matchReason) + '</div>' : "") +
       '<div class="tags">' + tags + '</div>' +
       '<div class="cardFoot">' +
-        '<button class="appliedBtn" id="btnApplied" title="You applied to this job elsewhere">Already applied</button>' +
+        '<button class="appliedBtn" id="btnApplied" title="You applied to this job elsewhere">✓ Already applied</button>' +
         (url ? '<a class="postingBtn" href="' + esc(url) + '" target="_blank" rel="noopener">View full posting ↗</a>' : "") +
       '</div>' +
     '</div>';
@@ -510,6 +511,21 @@ function renderLikedCard(job){
     '</div>';
 }
 
+function renderAppliedCard(job){
+  const d = job.data, url = safeUrl(d.url), id = esc(job.id);
+  return '<div class="likedCard">' +
+      '<div class="company">' + esc(d.company || "Unknown company") + '</div>' +
+      '<div class="title">' + esc(d.title || "Untitled role") + '</div>' +
+      '<div class="meta">' + esc(d.location || "") + (d.remote ? " · Remote" : "") + (d.appliedAt ? " · applied " + esc(fmtDay(d.appliedAt)) : "") + '</div>' +
+      (cvHref(d) || d.cvStatus ? renderCvRow(d) : "") +  // no "CV arrives" promise: applied jobs don't get new CVs
+      noteBlock(d, id) +
+      '<div class="likedActions">' +
+        (url ? '<a class="applyBtn" href="' + esc(url) + '" target="_blank" rel="noopener">View posting ↗</a>' : '<span class="applyBtn disabled">No link saved</span>') +
+        '<button class="restoreBtn" data-action="unapply" data-id="' + id + '">♥ Move to interested</button>' +
+      '</div>' +
+    '</div>';
+}
+
 function renderPassedCard(job){
   const d = job.data, url = safeUrl(d.url), id = esc(job.id);
   return '<div class="likedCard">' +
@@ -524,25 +540,34 @@ function renderPassedCard(job){
     '</div>';
 }
 
-let likedTab = "liked";   // "liked" | "disliked"
+const TAB_HEADING = {liked: "Jobs you're interested in", applied: "Jobs you applied to", disliked: "Jobs you passed on"};
+let likedTab = "liked";   // "liked" | "applied" | "disliked"
 function setLikedTab(tab){
   likedTab = tab;
   $("tabLiked").setAttribute("aria-selected", tab === "liked");
+  $("tabApplied").setAttribute("aria-selected", tab === "applied");
   $("tabPassed").setAttribute("aria-selected", tab === "disliked");
-  $("likedHeading").textContent = tab === "liked" ? "Jobs you're interested in" : "Jobs you passed on";
+  $("likedHeading").textContent = TAB_HEADING[tab];
   loadLikedList();
 }
 $("tabLiked").addEventListener("click", () => setLikedTab("liked"));
+$("tabApplied").addEventListener("click", () => setLikedTab("applied"));
 $("tabPassed").addEventListener("click", () => setLikedTab("disliked"));
 
 async function loadLikedList(){
   const tab = likedTab;
   likedList.innerHTML = '<div class="panelEmpty">Loading…</div>';
   let snap;
-  try{ snap = await db.collection("jobs").where("status", "==", tab).orderBy("swipedAt", "desc").limit(200).get(); }
+  const newest = tab === "applied" ? "appliedAt" : "swipedAt";
+  try{ snap = await db.collection("jobs").where("status", "==", tab).orderBy(newest, "desc").limit(200).get(); }
   catch(e){ snap = await db.collection("jobs").where("status", "==", tab).limit(200).get(); }
   if(tab !== likedTab) return;   // user switched tabs while loading
   const docs = snap.docs.map(d => ({id: d.id, data: d.data()}));
+  if(tab === "applied"){
+    likedList.innerHTML = docs.length ? docs.map(renderAppliedCard).join("") :
+      '<div class="panelEmpty"><div class="big">✓</div><div>No applied jobs yet.<br>Tap “✓ Already applied” on a card, or “Mark applied” on a job you liked.</div></div>';
+    return;
+  }
   if(tab === "disliked"){
     likedList.innerHTML = docs.length ? docs.map(renderPassedCard).join("") :
       '<div class="panelEmpty"><div class="big">✕</div><div>No passed jobs.<br>Jobs you swipe left on show up here, in case you change your mind.</div></div>';
@@ -567,6 +592,7 @@ likedList.addEventListener("click", e => {
   // Clear the pass note: it explained a "no" and would mislead the next search now that it's a "yes".
   if(act === "restore") return setStatus(id, {status: "liked", swipedAt: new Date().toISOString(), note: ""}, b, "Moving…");
   if(act === "applied") return setStatus(id, {status: "applied", appliedAt: new Date().toISOString()}, b, "Marking…");
+  if(act === "unapply") return setStatus(id, {status: "liked", appliedAt: ""}, b, "Moving…");
   const noteRowEl = likedList.querySelector('.noteEditRow[data-note-row="' + CSS.escape(id) + '"]');
   if(act === "note-toggle" && noteRowEl){ noteRowEl.classList.toggle("open"); if(noteRowEl.classList.contains("open")) noteRowEl.querySelector("input").focus(); return; }
   if(act === "note-save" && noteRowEl) return setStatus(id, {note: noteRowEl.querySelector("input").value.trim()}, b, "Saving…");

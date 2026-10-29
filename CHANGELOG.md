@@ -23,7 +23,8 @@ Open source and safer to share.
   saves it. You can still type a note before swiping. "Don't ask again" turns the question off, and ⚙ → Swipe notes
   turns it back on. Liked and passed jobs show your note and let you edit it.
 - **"Already applied"** is now a labelled button on the card (bottom left), next to "View full posting" (bottom right),
-  instead of the ✓ between the swipe buttons, which read as "yes".
+  instead of the ✓ between the swipe buttons, which read as "yes". Applied jobs get their own **Applied** tab under ♥,
+  with their CV and note, and "Move to interested" if you tapped it by mistake.
 - **Existing boards keep their old page.** The board page is copied when a board is made, so boards created before
   0.3.0 keep the old CV viewer (no "Board version" row under ⚙). Everything else in this release reaches them. The
   old viewer's pdf.js issue needs a malicious PDF, and the CVs on a board are built by your own CV task, so the risk

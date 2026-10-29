@@ -82,6 +82,9 @@ DATA = {
         "l2": {"status": "liked", "company": "Gone GmbH", "title": "Product Owner", "location": "Hamburg",
                "swipedAt": "2026-10-20T08:00:00Z", "url": "https://example.com/jobs/3", "cvAssetId": "gone",
                "cvCreatedAt": "2026-10-01T07:00:00Z"},
+        "a1": {"status": "applied", "company": "Applied Inc", "title": "Group Product Manager", "location": "Berlin",
+               "swipedAt": "2026-10-18T08:00:00Z", "appliedAt": "2026-10-23T09:00:00Z", "url": "https://example.com/jobs/6",
+               "cvAssetId": "cv1", "cvFileName": "Alex_Example_CV_Applied_Inc.pdf", "cvCreatedAt": "2026-10-22T07:00:00Z"},
         "l3": {"status": "liked", "company": "Paused AG", "title": "Product Lead", "location": "Munich",
                "swipedAt": "2026-10-19T08:00:00Z", "url": "https://example.com/jobs/4", "cvStatus": "removed",
                "cvAssetId": "", "cvCreatedAt": "2026-10-18T07:00:00Z"},
@@ -395,7 +398,7 @@ class BoardViewerTest(unittest.TestCase):
         self.assertEqual(page.locator("#controls button").count(), 2)  # only pass and like stay round
         foot = page.locator("#cardEl .cardFoot")
         applied, posting = foot.locator("#btnApplied"), foot.locator("a.postingBtn")
-        self.assertEqual(applied.inner_text(), "Already applied")
+        self.assertEqual(applied.inner_text(), "✓ Already applied")
         self.assertIn("View full posting", posting.inner_text())
         a, b = applied.bounding_box(), posting.bounding_box()
         self.assertLess(a["x"], b["x"])  # applied on the left, posting on the right
@@ -408,6 +411,29 @@ class BoardViewerTest(unittest.TestCase):
         page.wait_for_function("window.__fakeStore.jobs.p1.status === 'applied'")
         self.assertIn("Applied", page.inner_text("#whyStrip"))
         page.screenshot(path=str(OUT / "card-footer.png"))
+
+    def test_applied_tab_lists_applied_jobs(self):
+        page, _ = self.open_board()
+        page.click("#btnShowLiked")
+        page.click("#tabApplied")
+        self.assertEqual(page.get_attribute("#tabApplied", "aria-selected"), "true")
+        self.assertEqual(page.inner_text("#likedHeading"), "Jobs you applied to")
+        card = page.locator(".likedCard", has_text="Applied Inc")
+        self.assertIn("applied", card.locator(".meta").inner_text())
+        self.assertEqual(card.locator("[data-action=open-cv]").count(), 1)  # the CV used for the application stays
+        self.assertEqual(page.locator(".likedCard", has_text="Gone GmbH").count(), 0)
+        page.screenshot(path=str(OUT / "applied-tab.png"))
+        card.locator("[data-action=unapply]").click()
+        page.wait_for_function("window.__fakeStore.jobs.a1.status === 'liked'")
+        self.assertIn("No applied jobs yet", page.inner_text("#likedList"))
+
+    def test_marking_a_card_applied_puts_it_in_the_applied_tab(self):
+        page, _ = self.open_board()
+        page.click("#btnApplied")
+        page.wait_for_function("window.__fakeStore.jobs.p1.status === 'applied'")
+        page.click("#btnShowLiked")
+        page.click("#tabApplied")
+        page.wait_for_selector(".likedCard:has-text('Senior Product Manager')")
 
     def test_focus_moves_into_viewer_and_back(self):
         page, _ = self.open_board()
