@@ -73,9 +73,12 @@ DATA = {
         "p1": {"status": "pending", "company": "Example Corp", "title": "Senior Product Manager", "location": "Berlin",
                "addedDate": "2026-10-20", "blurb": "Own the data product roadmap.", "tags": ["B2B", "SQL"],
                "url": "https://example.com/jobs/1"},
+        "p2": {"status": "pending", "company": "Example Corp", "title": "Product Manager, Payments", "location": "Berlin",
+               "addedDate": "2026-10-19", "blurb": "Own checkout.", "url": "https://example.com/jobs/5"},
         "l1": {"status": "liked", "company": "Example Corp", "title": "Product Manager", "location": "Berlin",
                "swipedAt": "2026-10-21T08:00:00Z", "url": "https://example.com/jobs/2", "cvAssetId": "cv1",
-               "cvFileName": "Alex_Example_CV_Example_Corp.pdf", "cvCreatedAt": "2026-10-22T07:00:00Z"},
+               "cvFileName": "Alex_Example_CV_Example_Corp.pdf", "cvCreatedAt": "2026-10-22T07:00:00Z",
+               "note": "loved the team"},
         "l2": {"status": "liked", "company": "Gone GmbH", "title": "Product Owner", "location": "Hamburg",
                "swipedAt": "2026-10-20T08:00:00Z", "url": "https://example.com/jobs/3", "cvAssetId": "gone",
                "cvCreatedAt": "2026-10-01T07:00:00Z"},
@@ -322,6 +325,70 @@ class BoardViewerTest(unittest.TestCase):
         card = page.locator(".likedCard", has_text="Paused AG")
         self.assertEqual(card.locator(".cvRow").inner_text(), "CV deleted when CVs were turned off")
         self.assertEqual(card.locator("[data-action=open-cv]").count(), 0)
+
+    def stored(self, page, path):
+        name, doc = path.split("/")
+        return page.evaluate("([n, d]) => window.__fakeStore[n][d]", [name, doc])
+
+    def test_note_typed_before_swiping_goes_with_that_job(self):
+        page, _ = self.open_board()
+        page.fill("#noteInput", "too junior")
+        self.assertIn("saved with your swipe", page.inner_text("#noteRow").lower())
+        page.click("#btnPass")
+        page.wait_for_function("document.getElementById('whyStrip') && !document.getElementById('whyStrip').hidden")
+        self.assertEqual(self.stored(page, "jobs/p1")["note"], "too junior")
+        self.assertIn("Note saved: too junior", page.inner_text("#whyStrip"))
+        self.assertTrue(page.is_hidden("#whyInput"))
+        self.assertEqual(page.input_value("#noteInput"), "")  # the next card starts with an empty box
+
+    def test_after_swiping_it_asks_why_for_that_job(self):
+        page, _ = self.open_board()
+        page.click("#btnLike")
+        page.wait_for_selector("#whyInput", state="visible")
+        strip = page.inner_text("#whyStrip")
+        self.assertIn("Interested", strip)
+        self.assertIn("Senior Product Manager", strip)
+        page.fill("#whyInput", "great team")
+        page.press("#whyInput", "Enter")
+        page.wait_for_function("document.getElementById('whyStrip').textContent.includes('Note saved: great team')")
+        self.assertEqual(self.stored(page, "jobs/p1")["note"], "great team")
+        self.assertNotIn("note", self.stored(page, "jobs/p2"))
+        page.screenshot(path=str(OUT / "notes-after-swipe.png"))
+
+    def test_dont_ask_again_and_turn_it_back_on(self):
+        page, _ = self.open_board()
+        page.click("#btnPass")
+        page.wait_for_selector("#whyNever", state="visible")
+        page.click("#whyNever")
+        self.assertTrue(page.is_hidden("#whyStrip"))
+        self.assertIs(self.stored(page, "profile/me")["askWhyAfterSwipe"], False)
+        page.click("#btnPass")
+        page.wait_for_timeout(400)
+        self.assertTrue(page.is_hidden("#whyStrip"))
+        self.assertTrue(page.is_visible("#noteInput"))  # a note before swiping still works
+        page.click("#btnShowPrefs")
+        self.assertFalse(page.is_checked("#askWhyToggle"))
+        page.check("#askWhyToggle")
+        page.wait_for_function("window.__fakeStore.profile.me.askWhyAfterSwipe === true")
+        page.screenshot(path=str(OUT / "notes-setting.png"))
+
+    def test_undo_hides_the_why_strip(self):
+        page, _ = self.open_board()
+        page.click("#btnPass")
+        page.wait_for_selector("#whyInput", state="visible")
+        page.click("#btnUndo")
+        self.assertTrue(page.is_hidden("#whyStrip"))
+
+    def test_liked_card_shows_and_edits_the_note(self):
+        page, _ = self.open_board()
+        page.click("#btnShowLiked")
+        card = page.locator(".likedCard", has_text="Product Manager").first
+        self.assertIn("Your note: loved the team", card.inner_text())
+        card.locator("[data-action=note-toggle]").click()
+        card.locator("[data-note-edit]").fill("loved the team, hybrid ok")
+        card.locator("[data-action=note-save]").click()
+        page.wait_for_function("window.__fakeStore.jobs.l1.note === 'loved the team, hybrid ok'")
+        self.assertIn("Your note: loved the team, hybrid ok", page.locator(".likedCard", has_text="loved the team").inner_text())
 
     def test_focus_moves_into_viewer_and_back(self):
         page, _ = self.open_board()
