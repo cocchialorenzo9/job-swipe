@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.2
+
+- **Privacy link**: `plugin.json` now has a `privacyPolicyUrl` pointing to the README's "Your data and privacy" section, so the plugin directory can link to it.
+
 ## 0.3.1
 
 - **Icon**: the plugin now ships a listing icon (`.claude-plugin/icon.png`, 1024 × 1024 PNG): a job card mid-swipe with a red heart badge.
