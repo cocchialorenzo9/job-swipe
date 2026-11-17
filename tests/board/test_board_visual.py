@@ -12,9 +12,9 @@ Screenshots land in tests/board/out/.
 import base64, hashlib, json, os, pathlib, re, shutil, subprocess, sys, tempfile, unittest, urllib.request
 
 REPO = pathlib.Path(__file__).resolve().parents[2]
-BOARD = REPO / "plugins/job-swipe/board/job-swipe.html"
-BUILD = REPO / "plugins/job-swipe/skills/tailor-cvs/cv/build.py"
-EXAMPLES = BUILD.parent / "examples"
+BOARD = REPO / "reference/board/job-swipe.html"
+BUILD = REPO / "reference/cv/build.py"
+EXAMPLES = REPO / "plugins/job-swipe/skills/tailor-cvs/examples"
 HERE = pathlib.Path(__file__).resolve().parent
 OUT = HERE / "out"
 CACHE = HERE / ".cache"

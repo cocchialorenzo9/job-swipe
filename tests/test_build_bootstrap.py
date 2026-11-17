@@ -2,7 +2,7 @@
 import importlib.util, pathlib, subprocess, sys, unittest
 from unittest import mock
 
-BUILD = pathlib.Path(__file__).resolve().parents[1] / "plugins/job-swipe/skills/tailor-cvs/cv/build.py"
+BUILD = pathlib.Path(__file__).resolve().parents[1] / "reference/cv/build.py"
 
 
 def load_build():

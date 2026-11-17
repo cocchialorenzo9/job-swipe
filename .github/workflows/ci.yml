@@ -22,7 +22,7 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install LaTeX and poppler (the same packages build.py installs)
+      - name: Install LaTeX and poppler (the same packages the CV build installs)
         run: |
           sudo apt-get update -q
           sudo apt-get install -y -q texlive-latex-base texlive-latex-recommended texlive-fonts-recommended \
@@ -49,11 +49,11 @@ jobs:
           NETWORK: "1"
         run: python -m unittest discover tests -v
 
-      - name: Build the example CV
+      - name: Build the example CV with the reference builder
         run: |
-          python plugins/job-swipe/skills/tailor-cvs/cv/build.py \
-            plugins/job-swipe/skills/tailor-cvs/cv/examples/master_cv.example.yaml \
-            plugins/job-swipe/skills/tailor-cvs/cv/examples/job_spec.example.yaml cv_out | tee report.txt
+          python reference/cv/build.py \
+            plugins/job-swipe/skills/tailor-cvs/examples/master_cv.example.yaml \
+            plugins/job-swipe/skills/tailor-cvs/examples/job_spec.example.yaml cv_out | tee report.txt
           grep -q "^Pages: 1 " report.txt
           grep -q "^ATS text check: OK$" report.txt
 

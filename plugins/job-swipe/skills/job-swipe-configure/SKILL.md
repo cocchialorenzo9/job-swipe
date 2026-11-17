@@ -15,10 +15,12 @@ Files (paths relative to this SKILL.md):
 - `references/brief-template.md` — the search brief format.
 - `references/task-prompts.md` — the scheduled-task prompts.
 - `../../references/board-data.md` — which tools touch the board, and how to handle a refused write.
-- `../../board/job-swipe.html` — the board page.
+- `../../references/board-spec.md` — how to build the board page, with screenshots in
+  `../../references/board-screens/`. Its "Board spec version" is the board version.
+- `../../CHANGELOG.md` — what changed in each version (for offering a board rebuild).
 - `../../.claude-plugin/plugin.json` — the kit's `version` (stamped as `kitVersion`).
-- `../tailor-cvs/cv/` — CV builder (`build.py`), `examples/master_cv.example.yaml` (structure + rules for CV
-  details, incl. `style`), `examples/job_spec.example.yaml`.
+- `../tailor-cvs/references/cv-build.md` — how to build a CV; `../tailor-cvs/examples/master_cv.example.yaml`
+  (structure + rules for CV details, incl. `style`), `../tailor-cvs/examples/job_spec.example.yaml`.
 
 ## 0. Detect the situation
 
@@ -49,15 +51,15 @@ Follow `references/grilling.md` over the tree in `references/design-tree.md`:
 - Front-load the CV deep dive (branch B): you want every role, project, education detail and the numbers behind
   achievements. Branch C (what jobs) can share rounds with B once A is done.
 - Branch E (CV look) only if they want tailored CVs; finish it with **E-proto**: build a sample CV from their real
-  facts in the agreed style (write `master_cv.yaml` + a small spec for their #1 target role, run
-  `python3 ../tailor-cvs/cv/build.py master_cv.yaml spec.yaml cv_sample`; it must say `ATS text check: OK` and stay
-  within the page limit), look at a preview yourself (`pdftoppm -r 70 -png`), send them the PDF (with your file-sharing tool, e.g. SendUserFile; if you have none, tell them where the PDF is saved so they can open it), and run
+  facts in the agreed style (write `master_cv.yaml` + a small spec for their #1 target role, and build it as
+  `../tailor-cvs/references/cv-build.md` says; the report must say `ATS text check: OK` and stay within the page
+  limit), look at a preview yourself (`pdftoppm -r 70 -png`), send them the PDF (with your file-sharing tool, e.g. SendUserFile; if you have none, tell them where the PDF is saved so they can open it), and run
   one look-and-feel round on what they see. Iterate up to 3 times.
 
 While grilling, keep two drafts up to date in your working directory:
 - `brief.md` — the search brief (`references/brief-template.md`), in their language, only their facts and choices.
 - `master_cv.yaml` — their CV details, exactly in the structure and under the rules of
-  `../tailor-cvs/cv/examples/master_cv.example.yaml`, including `style` (from branch E), `tracks` (branch F) and
+  `../tailor-cvs/examples/master_cv.example.yaml`, including `style` (from branch E), `tracks` (branch F) and
   `never_list`. Truth only: rewording into XYZ bullets is fine; new facts are not. Plain text, no LaTeX.
 
 ## 3. Shared understanding — confirm before building
@@ -72,16 +74,15 @@ Ask: "Shall I build it like this?" Build nothing until they say yes. Changes →
 
 ## 4. Build
 
-1. **Board** (skip if reusing an empty one): copy `../../board/job-swipe.html` into the working directory unchanged
-   and publish it with the Artifact tool: `icon` "briefcase", `description` "My job feed: swipe right on jobs I
-   like.", `capabilities` `{"db": {}, "assets": {}, "downloads": true}` (load the artifact-capabilities skill first
-   if your tools ask you to). Keep the returned URL as BOARD_URL.
+1. **Board** (skip if reusing an empty one): build the board page from `../../references/board-spec.md`,
+   following its "How to build a board" steps: the acceptance checklist and the screenshot comparison come before
+   publishing. Publish it as the spec says. Keep the returned URL as BOARD_URL.
 2. **Profile**: `write_db` `set` collection `profile`, doc `me`:
    `name, timezone (IANA), language (of the brief), brief (text of brief.md), pickiness ("open" | "selective" |
    "exceptional"), maxNewPerRun, searchSchedule (human text, e.g. "Monday and Thursday mornings"), cvEnabled,
    cvSchedule (human text, omit if off), learned ([]), skippedPostings ([]), configuredAt (ISO now), boardUrl, kitVersion (the `version` in `../../.claude-plugin/plugin.json`),
-   boardVersion (the `BOARD_VERSION` in `../../board/job-swipe.html`; when reusing a board, keep its old value;
-   nothing reads it yet: it is kept so a later update can tell which page a board runs)`.
+   boardVersion (the "Board spec version" in `../../references/board-spec.md`; when reusing a board, keep its old
+   value)`.
 3. **CV details** (if CVs on): `write_db` `set` collection `profile`, doc `cv`:
    `{masterYaml: <full text of master_cv.yaml>, updatedAt: <ISO now>}`.
 4. **Check**: `read_db` `get` profile/me — the brief must be there.
@@ -111,6 +112,21 @@ Ask: "Shall I build it like this?" Build nothing until they say yes. Changes →
 ## 6. Reconfigure mode
 
 1. Read profile/me (and profile/cv). Show the current setup in 4–5 lines (jobs, rhythm, CV look, last configured).
+   **Board version.** If `boardVersion` is missing or older than the "Board spec version" in
+   `../../references/board-spec.md`, offer a rebuild before anything else, in one short message:
+   - What's new: the `../../CHANGELOG.md` entries newer than their version that say something about the board,
+     in 2–4 plain bullets (what they'd see or be able to do, not how it's built).
+   - Risks: the new board is built fresh, so it can look or behave a little differently, and a small slip in the
+     build could break something on it. Their jobs, swipes, notes, CVs and link stay, because the board's storage
+     and URL don't change.
+   - Ask: "Rebuild your board now? (yes / not now)". Not now → leave it alone and carry on; ask again next time.
+   Yes → build the page from the spec as in section 4 step 1, and publish it to the **same** board URL (Artifact
+   publish with `url` = BOARD_URL; read the artifact first if your tool asks). Then `update` profile/me with the
+   new `boardVersion`. If the publish fails, say so plainly: the old board is still there and unchanged.
+   Never rebuild a board from a scheduled task.
+   **Task prompts.** If a Job Swipe scheduled task's prompt (`list_triggers`) still mentions `git clone`, replace
+   it with the current prompt from `references/task-prompts.md` (`update_trigger`, same schedule) and say so in one
+   line: "I updated your scheduled tasks so they only use the installed plugin."
 2. If they already said what to change, grill only that branch of the tree (plus anything it unblocks).
    Otherwise ask one round: "What would you like to revisit? 1 jobs, 2 how often, 3 CV details (new job, new
    achievements), 4 CV look, 5 pause or stop, 6 a full re-interview".

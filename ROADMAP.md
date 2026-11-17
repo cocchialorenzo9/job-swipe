@@ -24,5 +24,5 @@ Ideas that are agreed on but not built yet. Roughly in order; nothing here has a
 
 ## Project
 
-- A release channel: plugin installs and the clone fallback follow tested releases instead of `main`.
+- A release channel: plugin installs follow tested releases instead of `main`.
 - A linter for skill files (links between files resolve, required sections exist, no network commands).

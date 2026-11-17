@@ -9,19 +9,24 @@ for merging is "safe for someone who never reads this repo".
 marketplace.json ─► plugins/job-swipe (installed in the Claude app)
                        ├─ skills/job-swipe-configure   interview, creates the board + scheduled tasks
                        ├─ skills/find-jobs             scheduled: search, verify, add cards
-                       ├─ skills/tailor-cvs            scheduled: one CV per liked job (cv/build.py)
+                       ├─ skills/tailor-cvs            scheduled: one CV per liked job (references/cv-build.md)
                        ├─ references/board-data.md     rules every skill follows (board writes, untrusted content)
-                       └─ board/job-swipe.html         the swipe page, copied into each person's board once
+                       └─ references/board-spec.md     the board's design; Claude builds each board from it
+
+reference/ (never shipped)
+                       ├─ board/job-swipe.html         the reference board: what the spec and its screenshots show
+                       └─ cv/build.py                  the reference CV builder: what cv-build.md describes
 ```
 
-People reach the instructions in two ways:
+The plugin folder ships only Markdown, text, JSON, YAML and images: the Claude plugin directory refuses code from
+publishers that aren't Verified organizations (see `docs/adr/0001-markdown-only-plugin.md`). A test fails if any
+other file type lands under `plugins/`. Code that helps build or check the plugin goes in `reference/` or `tests/`.
 
-- **Plugin install** (the normal path): the Claude app follows `main` and picks up a change when `plugin.json`'s
-  `version` changes.
-- **Clone fallback**: the scheduled-task prompts (`skills/job-swipe-configure/references/task-prompts.md`) and the
-  README's "Can't add plugins?" path clone `main` when the plugin isn't available.
+People reach the instructions only through the **plugin install**: the Claude app follows `main` and picks up a
+change when `plugin.json`'s `version` changes. Nothing clones or downloads the instructions at run time (a
+scheduled task without the plugin notifies and stops), so the directory's review covers everything that runs.
 
-Either way, **a merge to `main` reaches everyone at their next scheduled run.**
+So **a merge to `main` reaches everyone at their next plugin update.**
 
 ## Skill text is code
 
@@ -41,10 +46,11 @@ python3 -m unittest discover tests
 ```
 
 The CV builder tests need LaTeX and poppler (`pdflatex`, `kpsewhich`, `pdftotext`, `pdfinfo`); without them those tests skip
-locally (CI runs them with `REQUIRE_LATEX=1`, where a skip fails). Build the example CV once by hand too:
+locally (CI runs them with `REQUIRE_LATEX=1`, where a skip fails). They test the reference builder, which
+`cv-build.md` describes: change both together. Build the example CV once by hand too:
 
 ```bash
-python3 plugins/job-swipe/skills/tailor-cvs/cv/build.py plugins/job-swipe/skills/tailor-cvs/cv/examples/master_cv.example.yaml plugins/job-swipe/skills/tailor-cvs/cv/examples/job_spec.example.yaml cv_out
+python3 reference/cv/build.py plugins/job-swipe/skills/tailor-cvs/examples/master_cv.example.yaml plugins/job-swipe/skills/tailor-cvs/examples/job_spec.example.yaml cv_out
 ```
 
 It must report `Pages: 1` and `ATS text check: OK`.
@@ -56,14 +62,15 @@ pip install -r tests/board/requirements.txt && python3 -m playwright install chr
 python3 -m unittest tests.board.test_board_visual
 ```
 
-Screenshots land in `tests/board/out/`. The repo checks (`tests/test_repo_consistency.py`) also download the pinned
+Screenshots land in `tests/board/out/`. The spec's own screenshots come from
+`python3 tests/board/capture_spec_screens.py`, which writes `plugins/job-swipe/references/board-screens/`. The repo checks (`tests/test_repo_consistency.py`) also download the pinned
 pdf.js files and compare their hashes when `NETWORK=1` (always in CI).
 
 ## Trying a skill change safely
 
 1. Fork the repo and push your branch.
 2. In the Claude app: **Customize → Plugins → Add → Add marketplace → Add from a repository**, enter your fork.
-3. Make a throwaway test board with the example persona (`cv/examples/master_cv.example.yaml`, "Alex Example").
+3. Make a throwaway test board with the example persona (`skills/tailor-cvs/examples/master_cv.example.yaml`, "Alex Example").
    Never test with a real CV.
 4. Run `find-jobs` or `tailor-cvs` by hand against that test board.
 5. Delete the test board and any test scheduled tasks afterwards.
@@ -73,11 +80,17 @@ Your real board and scheduled tasks keep running the plugin you installed from t
 ## Making a release
 
 - Every pull request that changes anything under `plugins/` bumps `version` in
-  `plugins/job-swipe/.claude-plugin/plugin.json` and adds a `CHANGELOG.md` entry with the same version. CI checks
-  this. `BOARD_VERSION` in `job-swipe.html` always equals that version, so bump it too, even when the page itself
-  didn't change.
-- Board page changes only reach boards created after the release: the page is copied once, when a board is made.
-  Say so in the changelog.
+  `plugins/job-swipe/.claude-plugin/plugin.json` and adds a `plugins/job-swipe/CHANGELOG.md` entry with the same
+  version. CI checks this. The "Board spec version" in `board-spec.md` (both places) and `BOARD_VERSION` in the
+  reference board always equal that version, so bump them too, even when the board didn't change.
+- A board design change means: change `board-spec.md`, make the reference board match it, and run
+  `capture_spec_screens.py`. Existing boards only change when their owner accepts the rebuild that
+  `/job-swipe-configure` offers, so describe board changes in the changelog in words people understand: Claude
+  reads that entry to them.
+- Before a release that touches the board spec or `cv-build.md`, build from them by hand: run
+  `/job-swipe-configure` on a throwaway test board (example persona) and compare its screenshots with
+  `board-screens/` side by side, light and dark; and make one tailored CV for the example job spec. Do the board
+  build two or three times, since builds vary.
 
 ### Rolling back
 
