@@ -1,7 +1,7 @@
 # MASTER CV — every TRUE fact about one person. (This example is a made-up person.)
 # Rules for Claude:
 #  1. Only facts the person gave (their CV, their answers). Never invent numbers, tools, titles or dates.
-#  2. Plain text everywhere — build.py escapes LaTeX characters (&, %, $, #, _, €) for you.
+#  2. Plain text everywhere, no LaTeX: the CV build escapes every special character itself.
 #  3. Bullets follow Google's XYZ formula where the facts allow it:
 #     "Accomplished [X] as measured by [Y], by doing [Z]". No honest number -> keep it qualitative.
 #  4. priority: 1 = always keep, 2 = keep if it fits (default), 3 = first to drop.

@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.4.0
+
+The plugin now ships only instructions and pictures, no code, so it can be listed in the Claude plugin directory.
+
+- **Your board** is now built by Claude from a written design (`references/board-spec.md`), with screenshots to
+  match. It looks and works like before. Boards made with an earlier version keep working: the next time you run
+  `/job-swipe-configure`, Claude offers to rebuild yours, says what's new and what could go wrong, and keeps your
+  jobs, swipes, notes, CVs and link.
+- **Tailored CVs** are now written by Claude directly from your CV details (`skills/tailor-cvs/references/cv-build.md`),
+  with the same look, page fitting and text check as before. Nothing is installed from PyPI any more; LaTeX and
+  poppler are still installed with `apt` where they're missing.
+- **Safer CV builds**: every piece of text is escaped, only a short list of LaTeX commands is allowed in the CV, and
+  LaTeX runs with shell commands off and file access limited to the build folder.
+- **Scheduled tasks only use the installed plugin.** They no longer download Job Swipe from GitHub when the
+  plugin is missing; they send a notification saying so instead. `/job-swipe-configure` updates older tasks for
+  you. The README's "Can't add plugins?" route is gone for the same reason.
+- The changelog now lives in the plugin folder, so Claude can read it when it offers a board rebuild.
+
 ## 0.3.3
 
 - **Privacy section**: the README now says that Job Swipe has no server and reads no API keys, tokens, passwords or cookies. It also lists what the CV builder may install (`jinja2` and `pyyaml` from PyPI, and LaTeX and poppler with `apt`), where the fallback venv lives, and that those services see only package names.

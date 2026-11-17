@@ -4,7 +4,7 @@ import os, pathlib, shutil, subprocess, sys, tempfile, unittest
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from test_build_bootstrap import BUILD, load_build
 
-EXAMPLES = BUILD.parent / "examples"
+EXAMPLES = BUILD.parents[2] / "plugins/job-swipe/skills/tailor-cvs/examples"
 HAVE_LATEX = all(shutil.which(t) for t in ("pdflatex", "pdfinfo", "pdftotext", "kpsewhich"))
 REQUIRE_LATEX = os.environ.get("REQUIRE_LATEX") == "1"  # CI: a skipped LaTeX test is a failure
 

@@ -55,12 +55,7 @@ The first CV can take a few minutes: Claude installs its CV tools the first time
 
 Open **Scheduled tasks** in Claude and open each "Job Swipe" task. If **Automatically approve** is off, turn it on. Otherwise the task waits for you to click "allow" instead of running on its own. (Claude tells you at the end of setup if this is needed.)
 
-**Can't add plugins?** Type this in a new Claude task instead. It does the same thing:
-
-```
-Configure Job Swipe for me. Run: rm -rf /tmp/job-swipe && git clone --depth 1 https://github.com/cocchialorenzo9/job-swipe /tmp/job-swipe
-then follow /tmp/job-swipe/plugins/job-swipe/skills/job-swipe-configure/SKILL.md
-```
+Job Swipe needs the plugin installed: the scheduled tasks run it from there, and never download instructions from anywhere else. If a task runs somewhere the plugin isn't, it sends you a notification saying so and changes nothing.
 
 ---
 
@@ -88,10 +83,10 @@ What Job Swipe keeps, and who can see it:
 | Tailored CV PDFs | Your board | You, and anyone you share the board with | 7 days after each one is made |
 | Everything the scheduled tasks read, your CV details included | Anthropic, which runs the tasks | Anthropic, under the terms of your Claude account; you, in each task's run history | As long as Claude keeps your task history |
 | Search terms: role titles, places, languages, skills and company names | The web search service and the job sites Claude opens | Those services | Their own logs |
-| Package names only (no CV data): `jinja2`, `pyyaml`, and on Debian/Ubuntu LaTeX and poppler | PyPI and your system's package mirrors, when the CV builder installs what's missing | Those services | Their own logs |
+| Package names only (no CV data): LaTeX and poppler, on Debian/Ubuntu | Your system's package mirrors, when the CV build installs what's missing | Those services | Their own logs |
 
 - **No keys, no server.** Job Swipe has no server of its own and never reads your API keys, tokens, passwords or cookies. The board only talks to your Claude account's own storage and to cdnjs for the PDF viewer.
-- **What the CV builder installs.** The first time it builds a CV, the builder installs any of these it can't find: the Python packages `jinja2` and `pyyaml` (from PyPI), and on Debian/Ubuntu LaTeX and poppler (with `apt`). If your system Python won't accept the packages, they go into their own environment at `~/.cache/job-swipe/venv`, which you can delete at any time. It downloads nothing else.
+- **What the CV build installs.** On Debian/Ubuntu, the first time Claude builds a CV it installs LaTeX and poppler with `apt` if they're missing. Nothing else is installed or downloaded. (Before 0.4.0 the builder also installed `jinja2` and `pyyaml` from PyPI, into `~/.cache/job-swipe/venv` when needed; you can delete that folder.)
 
 - **Your board is private.** Nobody else (including whoever shared Job Swipe with you) can see your jobs, swipes or CV unless you share the board yourself.
 - **What leaves your account.** Searches use role titles, places and skill keywords from your CV and brief. Claude is told never to put your name, contact details or CV text into a search, a link or a form.
@@ -116,9 +111,10 @@ Job Swipe is a personal open-source project. It is not made by or affiliated wit
 | `plugins/job-swipe/skills/job-swipe-configure` | The interview (in the style of [grilling](https://github.com/mattpocock/skills)), creating your board, scheduling, and later changes |
 | `plugins/job-swipe/skills/find-jobs` | The search: reads your brief and swipes, searches, checks each job is live on the company site, adds cards |
 | `plugins/job-swipe/skills/tailor-cvs` | Builds a one-page CV for each liked job (LaTeX, single column, readable by application systems) |
-| `plugins/job-swipe/board/job-swipe.html` | The swipe board page |
+| `plugins/job-swipe/references/board-spec.md` | The board's design: Claude builds your board from it, with the screenshots next to it |
 | `plugins/job-swipe/references/board-data.md` | Rules all three skills follow when reading and writing your board |
-| `tests/` | Tests for the CV builder, the board's CV viewer and the repo itself |
+| `reference/` | The reference board and CV builder the instructions were written from; not part of the plugin |
+| `tests/` | Tests for the reference CV builder, the board's CV viewer and the repo itself |
 
 Your scheduled tasks only point to these instructions; they don't copy them. When this repo gets better, the improvements reach you through plugin updates. You never redo the setup. If you don't see updates arriving, open **Customize → Plugins** and update **job-swipe** (or turn on automatic updates for its marketplace, if your app offers it).
 
@@ -126,4 +122,4 @@ Ideas or problems? [Open an issue](https://github.com/cocchialorenzo9/job-swipe/
 
 ## For developers
 
-Want to change something? Start with [CONTRIBUTING.md](CONTRIBUTING.md): how the pieces fit, the checks to run, and how to try a skill change without touching your real board. Plans live in [ROADMAP.md](ROADMAP.md), changes in [CHANGELOG.md](CHANGELOG.md), and security reports go through [SECURITY.md](SECURITY.md).
+Want to change something? Start with [CONTRIBUTING.md](CONTRIBUTING.md): how the pieces fit, the checks to run, and how to try a skill change without touching your real board. Plans live in [ROADMAP.md](ROADMAP.md), changes in [CHANGELOG.md](plugins/job-swipe/CHANGELOG.md), and security reports go through [SECURITY.md](SECURITY.md).

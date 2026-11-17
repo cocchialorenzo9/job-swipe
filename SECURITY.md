@@ -16,8 +16,10 @@ Please don't publish the details until a fix is out. You'll get a first answer w
 ## In scope
 
 - The skills (`plugins/job-swipe/skills/`) and their shared rules (`plugins/job-swipe/references/`).
-- The board page (`plugins/job-swipe/board/job-swipe.html`).
-- The CV builder (`plugins/job-swipe/skills/tailor-cvs/cv/`).
+- The board spec (`plugins/job-swipe/references/board-spec.md`) and the boards built from it, and the reference
+  board (`reference/board/job-swipe.html`).
+- The CV build instructions (`plugins/job-swipe/skills/tailor-cvs/references/cv-build.md`), for example text that
+  gets past the escaping into LaTeX, and the reference builder (`reference/cv/`).
 
 Examples: a job page that makes the agent leak CV or contact data, run commands or change the board; script
 injection (XSS) on the board; anything that deletes a board or someone's stored CVs; a posting text that breaks CV
