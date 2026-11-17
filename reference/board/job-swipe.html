@@ -39,6 +39,7 @@ h1{font-size:19px; margin:0 0 2px; letter-spacing:-.01em;}
   border-radius:999px; padding:8px 12px; font-size:12.5px; font-weight:600; cursor:pointer; min-height:44px;
   display:flex; align-items:center; gap:6px; white-space:nowrap; font-family:inherit;
 }
+.pillBtn.iconBtn{width:44px; height:44px; padding:0; justify-content:center; font-size:20px; line-height:1;}
 .pillBtn .badge{background:var(--like); color:#fff; border-radius:999px; padding:1px 7px; font-size:11px; min-width:16px; text-align:center;}
 .counts{display:flex; justify-content:space-between; align-items:center; gap:14px; font-size:12px; color:var(--sub); margin-bottom:18px;}
 .counts b{color:var(--text);}
@@ -182,7 +183,7 @@ button.round:focus-visible,.pillBtn:focus-visible,.undoBtn:focus-visible,.cvBar 
       <p class="sub" id="subline">Swipe right on jobs you like, left on the rest. Your swipes teach the next search.</p>
     </div>
     <div class="topBtns">
-      <button class="pillBtn" id="btnShowPrefs" title="What I'm looking for" aria-label="Preferences">⚙</button>
+      <button class="pillBtn iconBtn" id="btnShowPrefs" title="What I'm looking for" aria-label="Preferences">⚙</button>
       <button class="pillBtn" id="btnShowLiked" title="Jobs you liked">♥ <span class="badge" id="likedBadge">0</span></button>
     </div>
   </div>

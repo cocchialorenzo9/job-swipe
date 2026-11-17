@@ -122,7 +122,8 @@ Define these once and use only them. Dark values apply when the system is dark, 
 | Swipe card | Radius 20, 1 px border, shadow, padding 22; fills a 480 px tall stage |
 | List cards (tabs) | Radius 16, 1 px border, shadow, padding 16, 12 px apart |
 | Preference boxes | Radius 16, 1 px border, padding 16, 14 px apart |
-| Pill buttons (⚙, ♥ count) | Fully round, 1 px border, card background, padding 8×12, 12.5 px semibold |
+| ♥ count pill | Fully round, 1 px border, card background, 44 px tall, padding 8×12, 12.5 px semibold |
+| ⚙ button | A 44 × 44 px circle (no padding), 1 px border, card background, the gear 20 px and centred; the same height as the ♥ pill |
 | Like / pass buttons | 56 px circles, 1 px border, card background, soft shadow, 22 px symbol in like / pass colour, 16 px apart, centred |
 | Ordinary buttons and inputs | Radius 10 |
 | Tabs | A chip-bg track, fully round, padding 3; the selected tab has card background, text colour and a small shadow |
@@ -137,8 +138,8 @@ a time; switching scrolls to the top. A full-screen **CV viewer** opens on top o
 - Left: the title "Job Swipe · <first name>" ("Job Swipe" without a name). Under it the subline:
   "Right = interested, left = pass. New jobs arrive <searchSchedule, or 'at the next search'>." plus, when CVs are
   on, " Liked jobs get a tailored CV <cvSchedule, or 'at the next CV run'>."
-- Right, side by side with 8 px between: a ⚙ pill (label "Preferences", tooltip "What I'm looking for") and a
-  ♥ pill with a green badge holding the number of liked jobs (tooltip "Jobs you liked").
+- Right, side by side with 8 px between: the round ⚙ button (label "Preferences", tooltip "What I'm looking for")
+  and a ♥ pill with a green badge holding the number of liked jobs (tooltip "Jobs you liked").
 
 ### Swipe view — `swipe-card-*.png`, `swipe-why-strip-light.png`, `swipe-empty-light.png`
 
