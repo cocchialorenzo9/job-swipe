@@ -88,6 +88,10 @@ What Job Swipe keeps, and who can see it:
 | Tailored CV PDFs | Your board | You, and anyone you share the board with | 7 days after each one is made |
 | Everything the scheduled tasks read, your CV details included | Anthropic, which runs the tasks | Anthropic, under the terms of your Claude account; you, in each task's run history | As long as Claude keeps your task history |
 | Search terms: role titles, places, languages, skills and company names | The web search service and the job sites Claude opens | Those services | Their own logs |
+| Package names only (no CV data): `jinja2`, `pyyaml`, and on Debian/Ubuntu LaTeX and poppler | PyPI and your system's package mirrors, when the CV builder installs what's missing | Those services | Their own logs |
+
+- **No keys, no server.** Job Swipe has no server of its own and never reads your API keys, tokens, passwords or cookies. The board only talks to your Claude account's own storage and to cdnjs for the PDF viewer.
+- **What the CV builder installs.** The first time it builds a CV, the builder installs any of these it can't find: the Python packages `jinja2` and `pyyaml` (from PyPI), and on Debian/Ubuntu LaTeX and poppler (with `apt`). If your system Python won't accept the packages, they go into their own environment at `~/.cache/job-swipe/venv`, which you can delete at any time. It downloads nothing else.
 
 - **Your board is private.** Nobody else (including whoever shared Job Swipe with you) can see your jobs, swipes or CV unless you share the board yourself.
 - **What leaves your account.** Searches use role titles, places and skill keywords from your CV and brief. Claude is told never to put your name, contact details or CV text into a search, a link or a form.

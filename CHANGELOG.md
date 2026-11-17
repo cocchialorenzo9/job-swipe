@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.3
+
+- **Privacy section**: the README now says that Job Swipe has no server and reads no API keys, tokens, passwords or cookies. It also lists what the CV builder may install (`jinja2` and `pyyaml` from PyPI, and LaTeX and poppler with `apt`), where the fallback venv lives, and that those services see only package names.
+
 ## 0.3.2
 
 - **Privacy link**: `plugin.json` now has a `privacyPolicyUrl` pointing to the README's "Your data and privacy" section, so the plugin directory can link to it.
