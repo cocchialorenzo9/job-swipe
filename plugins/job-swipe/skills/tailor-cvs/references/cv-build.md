@@ -80,7 +80,9 @@ Text that goes into the PDF's metadata (title, author, subject) only escapes `\ 
   ending, nothing else) → `\href{mailto:<address>}{<escaped address>}`.
 - A clean web address (optional `http://` or `https://`, domain labels of letters, digits and hyphens, a 2+
   letter ending, then an optional path of URL characters only, no spaces) → `\href{<address with https:// added if
-  it had no scheme>}{<escaped address without the scheme>}`. In the link target, write `%` as `\%` and `#` as `\#`.
+  it had no scheme>}{<escaped address without the scheme>}`.
+- In every link target, email or web, write `%` as `\%` and `#` as `\#` (an unescaped `%` would cut the rest of
+  the line off and break the compile).
 - Anything else → escaped plain text. If it contains `@`, or a dot and no space, it was probably meant as an
   address: report "Contact shown without link: <entry>".
 
@@ -116,7 +118,7 @@ In this order:
 
 1. Centred header: the name in `\LARGE` bold (wrapped in `\MakeUppercase` unless `name_case` is `as_written`),
    a line break with 3pt extra; the headline in italics and a line break with 2pt extra, if there is one; the
-   contact entries joined by ` \textbar\ `. After the centred block, `\vspace{-6pt}`.
+   contact entries joined by ` \textbar{} ` (a space on each side). After the centred block, `\vspace{-6pt}`.
 2. Then each section in the style's order, skipping empty ones:
    - **Summary**: section "Summary", the summary text.
    - **Experience**: section "Experience"; for each role `\role{title}{company, location}{dates}` (", location"

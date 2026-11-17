@@ -63,9 +63,9 @@ class DirectoryFileTypeTest(unittest.TestCase):
               ".gif": b"GIF8", ".webp": b"RIFF", ".ico": b"\x00\x00\x01\x00"}
 
     def shipped(self):
-        out = subprocess.run(["git", "ls-files", "--cached", "--others", "--exclude-standard", "plugins/"],
-                             cwd=REPO, capture_output=True, text=True, check=True).stdout.split()
-        return [REPO / f for f in out if (REPO / f).is_file()]
+        out = subprocess.run(["git", "ls-files", "-z", "--cached", "--others", "--exclude-standard", "plugins/"],
+                             cwd=REPO, capture_output=True, text=True, check=True).stdout
+        return [REPO / f for f in out.split("\0") if f and (REPO / f).is_file()]
 
     def test_only_allowed_file_types_ship(self):
         for f in self.shipped():
